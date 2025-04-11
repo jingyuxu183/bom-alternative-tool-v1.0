@@ -5,7 +5,6 @@ import re
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-import time
 
 # 加载环境变量
 load_dotenv()
@@ -89,14 +88,11 @@ def get_alternative_parts(part_number):
     Returns:
         list: 包含三种替代方案的列表，每项为字典，包含型号、参数和数据手册链接
     """
-    # 清理输入，移除多余的空格
-    clean_part_number = part_number.strip()
-    
     # 构造提示，要求返回 JSON 格式的推荐结果
     prompt = f"""
     任务：你是一个专业的电子元器件顾问，专精于国产替代方案。请为以下元器件推荐替代产品。
 
-    输入元器件型号：{clean_part_number}
+    输入元器件型号：{part_number}
 
     要求：
     1. 必须推荐至少一种中国大陆本土品牌(如GigaDevice/兆易创新、WCH/沁恒、复旦微电子、中颖电子等)的产品作为替代方案
@@ -118,9 +114,6 @@ def get_alternative_parts(part_number):
     """
     
     try:
-        # 记录API调用开始时间
-        start_time = time.time()
-        
         # 调用 DeepSeek API
         response = client.chat.completions.create(
             model="deepseek-chat",  # 使用 deepseek-chat 模型
@@ -132,9 +125,6 @@ def get_alternative_parts(part_number):
             max_tokens=1000
         )
         
-        # 计算API调用耗时
-        elapsed_time = time.time() - start_time
-        
         # 获取原始响应内容
         raw_content = response.choices[0].message.content
         
@@ -142,11 +132,9 @@ def get_alternative_parts(part_number):
         with st.sidebar.expander("调试信息", expanded=False):
             st.write("**API 原始响应:**")
             st.code(raw_content, language="json")
-            st.write(f"**API调用耗时:** {elapsed_time:.2f}秒")
         
         # 使用增强的JSON提取函数处理响应内容
         recommendations = extract_json_content(raw_content.strip())
-        
         return recommendations
         
     except Exception as e:
@@ -154,130 +142,8 @@ def get_alternative_parts(part_number):
         st.sidebar.error(f"详细错误信息：{str(e)}")
         return []
 
-# 用户反馈数据存储的函数 - 改为内存存储
-def save_feedback(part_number, feedback_score, feedback_text=""):
-    """
-    保存用户对查询结果的反馈到会话状态中
-    
-    Args:
-        part_number (str): 查询的元器件型号
-        feedback_score (int): 评分 (1-5)
-        feedback_text (str): 用户的详细反馈意见
-    """
-    # 初始化反馈存储
-    if 'user_feedback' not in st.session_state:
-        st.session_state.user_feedback = []
-    
-    feedback_data = {
-        "part_number": part_number,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "score": feedback_score,
-        "feedback_text": feedback_text
-    }
-    
-    # 添加到session_state
-    st.session_state.user_feedback.append(feedback_data)
-    
-    # 更新反馈统计信息
-    if 'feedback_stats' not in st.session_state:
-        st.session_state.feedback_stats = {"total": 0, "avg_score": 0}
-    
-    st.session_state.feedback_stats["total"] += 1
-    
-    # 重新计算平均分数
-    all_feedbacks = st.session_state.user_feedback
-    
-    if all_feedbacks:
-        avg_score = sum(fb["score"] for fb in all_feedbacks) / len(all_feedbacks)
-        st.session_state.feedback_stats["avg_score"] = round(avg_score, 1)
-        st.session_state.feedback_stats["total"] = len(all_feedbacks)
-
-def get_feedback_stats():
-    """获取反馈统计信息"""
-    if 'feedback_stats' not in st.session_state:
-        # 初始化反馈统计
-        if 'user_feedback' not in st.session_state:
-            st.session_state.user_feedback = []
-            
-        all_feedbacks = st.session_state.user_feedback
-        
-        if all_feedbacks:
-            avg_score = sum(fb["score"] for fb in all_feedbacks) / len(all_feedbacks)
-            st.session_state.feedback_stats = {
-                "total": len(all_feedbacks),
-                "avg_score": round(avg_score, 1)
-            }
-        else:
-            st.session_state.feedback_stats = {"total": 0, "avg_score": 0}
-    
-    return st.session_state.feedback_stats
-
-# 创建反馈界面组件
-def render_feedback_ui(part_number, container=None):
-    """
-    渲染用户反馈界面
-    
-    Args:
-        part_number (str): 元器件型号
-        container: streamlit容器，如果为None则使用st
-    """
-    if container is None:
-        container = st
-    
-    # 检查是否已经提交过反馈
-    feedback_key = f"feedback_{part_number}"
-    if feedback_key in st.session_state:
-        container.success("✅ 感谢您的反馈!")
-        return
-    
-    container.markdown("### 您对这些替代方案的满意度如何?")
-    container.write("您的反馈将帮助我们改进查询质量和结果准确性")
-    
-    # 使用列布局放置评分按钮
-    cols = container.columns(5)
-    
-    # 定义评分处理函数
-    def submit_rating(score):
-        st.session_state[feedback_key] = score
-        save_feedback(part_number, score)
-        st.experimental_rerun()
-    
-    # 创建评分按钮
-    with cols[0]:
-        if st.button("😞 很差", key=f"rating_1_{part_number}"):
-            submit_rating(1)
-    with cols[1]:
-        if st.button("🙁 不满意", key=f"rating_2_{part_number}"):
-            submit_rating(2)
-    with cols[2]:
-        if st.button("😐 一般", key=f"rating_3_{part_number}"):
-            submit_rating(3)
-    with cols[3]:
-        if st.button("🙂 满意", key=f"rating_4_{part_number}"):
-            submit_rating(4)
-    with cols[4]:
-        if st.button("😊 非常满意", key=f"rating_5_{part_number}"):
-            submit_rating(5)
-    
-    # 添加详细反馈文本框 - 修复空标签问题，添加一个标签名称
-    feedback_text = container.text_area("反馈意见", 
-                                       placeholder="您有什么具体的建议或意见吗?", 
-                                       key=f"feedback_text_{part_number}")
-    
-    if container.button("提交详细反馈", key=f"submit_feedback_{part_number}"):
-        # 如果用户没有评分就直接提交文本反馈，默认为3分
-        if feedback_key not in st.session_state:
-            save_feedback(part_number, 3, feedback_text)
-        else:
-            save_feedback(part_number, st.session_state[feedback_key], feedback_text)
-        st.session_state[feedback_key] = True
-        st.experimental_rerun()
-
 # Streamlit 界面
 st.set_page_config(page_title="BOM 元器件国产替代推荐工具", layout="wide")
-
-# 初始化反馈统计
-feedback_stats = get_feedback_stats()
 
 # 更新CSS样式，增强视觉效果
 st.markdown("""
@@ -377,24 +243,20 @@ st.markdown("""
         margin-bottom: 0 !important;
     }
     
-    /* 完全自定义输入框样式，增加高度和改进字体显示 */
+    /* 完全自定义输入框样式 */
     .stTextInput > div > div > input {
         border-radius: 0.8rem;
         border: 2px solid #b3d1ff;
-        padding: 0.8rem 1.2rem; /* 增加上下内边距 */
-        font-size: 1.4rem; /* 稍微调整字体大小 */
-        height: 90px; /* 再次增加高度以确保足够空间 */
+        padding: 0 1.2rem;
+        font-size: 1.3rem;
+        height: 65px; /* 增加高度从60px到65px */
         box-shadow: 0 6px 15px rgba(26, 115, 232, 0.12);
         color: #333333;
         background-color: white;
         width: 100%;
-        line-height: 1.5; /* 设置合理的行高 */
-        margin-top: 5px;
-        margin-bottom: 5px;
-        overflow: visible; /* 确保文本不被截断 */
-        white-space: normal; /* 允许文本换行 */
-        text-overflow: initial; /* 不使用省略号 */
-        display: block; /* 确保元素完全显示 */
+        line-height: 65px; /* 与高度匹配确保垂直居中 */
+        margin-top: 5px; /* 添加顶部间距 */
+        margin-bottom: 5px; /* 添加底部间距 */
     }
     
     .stTextInput > div > div > input:focus {
@@ -405,9 +267,7 @@ st.markdown("""
     .stTextInput > div > div > input::placeholder {
         color: #8c9bb5;
         opacity: 0.8;
-        font-size: 1.3rem; /* 调整占位符文字大小 */
-        position: relative; /* 确保占位符在适当位置 */
-        top: 0; /* 避免占位符位置偏移 */
+        font-size: 1.2rem; /* 调整占位符文字大小 */
     }
     
     /* 移除输入框的标签 */
@@ -415,17 +275,16 @@ st.markdown("""
         display: none !important;
     }
     
-    /* 输入框容器调整 - 防止截断 */
+    /* 输入框容器调整 */
     .stTextInput > div {
         padding: 3px 0; /* 为容器添加内边距 */
-        overflow: visible !important; /* 确保不会截断内容 */
     }
     
     /* 按钮样式 - 确保与输入框完全匹配 */
     .stButton {
-        height: 90px; /* 与更新后的输入框高度匹配 */
+        height: 65px; /* 与输入框相同的固定高度 */
         margin-bottom: 0 !important;
-        margin-top: 5px;
+        margin-top: 5px; /* 添加顶部间距 */
     }
     
     .stButton > button {
@@ -436,9 +295,10 @@ st.markdown("""
         background: linear-gradient(90deg, #1a73e8, #4285f4);
         color: white;
         transition: all 0.3s;
-        height: 90px; /* 与输入框高度匹配 */
+        height: 65px; /* 固定高度与输入框一致 */
         width: 100%;
         padding: 0;
+        line-height: 65px; /* 确保文字垂直居中 */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -512,12 +372,12 @@ st.markdown("""
         padding-bottom: 0.2rem;
     }
     
-    /* 历史记录样式 - 增加上边距 */
+    /* 历史记录样式 - 减小尺寸 */
     .history-area {
         background: linear-gradient(145deg, #ffffff, #f0f7ff);
         padding: 1.2rem;
         border-radius: 0.8rem;
-        margin-top: 3rem; /* 增加上边距，将历史记录区域下移 */
+        margin-top: 1.5rem;
         box-shadow: 0 4px 10px rgba(26, 115, 232, 0.07);
         max-width: 900px;
         margin-left: auto;
@@ -573,23 +433,22 @@ st.markdown('<div class="header-container">', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">BOM 元器件国产替代推荐工具</h1>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 搜索区域 - 修改结构，删除选项卡，只保留单个查询功能
+# 搜索区域 - 修改结构，确保输入框和按钮完全匹配
 with st.container():
     st.markdown('<div class="search-area">', unsafe_allow_html=True)
-    
-    # 移除选项卡，直接显示搜索框和按钮
     st.markdown('<div class="search-container">', unsafe_allow_html=True)
+    
     col1, col2 = st.columns([3, 1])
     with col1:
         st.markdown('<div class="search-input">', unsafe_allow_html=True)
-        part_number = st.text_input("元器件型号", placeholder="输入元器件型号，例如：STM32F103C8", label_visibility="collapsed")
+        part_number = st.text_input("", placeholder="输入元器件型号，例如：STM32F103C8", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="search-button">', unsafe_allow_html=True)
         search_button = st.button("🔍 查询替代方案", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
     
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # 在此处添加历史查询功能
@@ -641,11 +500,8 @@ if search_button:
                     <p>请尝试修改搜索关键词或查询其他型号</p>
                 </div>
                 """, unsafe_allow_html=True)
+                
             st.markdown('</div>', unsafe_allow_html=True)
-            
-            # 添加反馈界面
-            st.markdown("---")
-            render_feedback_ui(part_number)
 
 # 添加历史记录展示区 - 减小尺寸
 with st.expander("📜 历史查询记录", expanded=False):
@@ -680,14 +536,13 @@ with st.expander("📜 历史查询记录", expanded=False):
                 if st.button(f"查看", key=f"view_history_{idx}"):
                     st.session_state.selected_history = history_item
                     st.experimental_rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 # 显示选中的历史记录
 if 'selected_history' in st.session_state:
     st.markdown("---")
-    history_part_number = st.session_state.selected_history['part_number']
-    st.subheader(f"历史查询结果: {history_part_number}")
+    st.subheader(f"历史查询结果: {st.session_state.selected_history['part_number']}")
     st.caption(f"查询时间: {st.session_state.selected_history['timestamp']}")
     
     # 使用与原始查询相同的显示逻辑
@@ -695,6 +550,7 @@ if 'selected_history' in st.session_state:
     
     # 结果区域添加容器
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
+    
     if recommendations:
         # 创建三列布局
         cols = st.columns(min(3, len(recommendations)))
@@ -718,16 +574,13 @@ if 'selected_history' in st.session_state:
             <p>请尝试修改搜索关键词或查询其他型号</p>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 添加反馈界面
-    st.markdown("---")
-    render_feedback_ui(history_part_number)
     
     if st.button("返回"):
         del st.session_state.selected_history
         st.experimental_rerun()
 
 # 添加页脚信息 - 降低显示度
+st.markdown("---")
 st.markdown('<p class="footer-text">💡 本工具基于深度学习模型，提供元器件替代参考，实际使用请结合专业工程师评估</p>', unsafe_allow_html=True)
