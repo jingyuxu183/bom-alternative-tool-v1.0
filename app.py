@@ -6,11 +6,9 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 import hashlib
-import pickle
-from pathlib import Path
-import time
 import pandas as pd
 import io
+import time  # 添加time模块导入
 from concurrent.futures import ThreadPoolExecutor
 
 # 加载环境变量
@@ -30,23 +28,20 @@ except Exception as e:
     st.error(f"初始化 DeepSeek API 客户端失败：{e}")
     st.stop()
 
-# 添加缓存目录
-CACHE_DIR = Path("cache")
-CACHE_DIR.mkdir(exist_ok=True)
+# 初始化内存缓存
+if 'cache_data' not in st.session_state:
+    st.session_state.cache_data = {}  # 用于存储缓存数据
+if 'cache_stats' not in st.session_state:
+    st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
 
-# 缓存管理函数
+# 缓存管理函数 - 使用内存而非文件系统
 def get_cache_key(part_number):
     """根据元器件型号生成唯一缓存键"""
     return hashlib.md5(part_number.lower().strip().encode()).hexdigest()
 
-def get_cache_path(cache_key):
-    """根据缓存键生成缓存文件路径"""
-    return CACHE_DIR / f"{cache_key}.pkl"
-
 def save_to_cache(part_number, data, expiry_hours=72):
-    """将查询结果保存到缓存"""
+    """将查询结果保存到内存缓存"""
     cache_key = get_cache_key(part_number)
-    cache_path = get_cache_path(cache_key)
     
     cached_item = {
         "part_number": part_number,
@@ -55,79 +50,50 @@ def save_to_cache(part_number, data, expiry_hours=72):
         "expiry": time.time() + (expiry_hours * 3600)  # 默认缓存72小时
     }
     
-    with open(cache_path, 'wb') as f:
-        pickle.dump(cached_item, f)
-    
-    # 更新缓存统计信息
-    if 'cache_stats' not in st.session_state:
-        st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
-    st.session_state.cache_stats["total_entries"] = len(list(CACHE_DIR.glob("*.pkl")))
+    # 保存到session_state中
+    st.session_state.cache_data[cache_key] = cached_item
+    st.session_state.cache_stats["total_entries"] = len(st.session_state.cache_data)
 
 def get_from_cache(part_number):
-    """尝试从缓存获取结果，如果有效则返回，否则返回None"""
+    """尝试从内存缓存获取结果，如果有效则返回，否则返回None"""
     cache_key = get_cache_key(part_number)
-    cache_path = get_cache_path(cache_key)
     
-    if not cache_path.exists():
-        # 更新缓存统计信息
-        if 'cache_stats' not in st.session_state:
-            st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
+    if cache_key not in st.session_state.cache_data:
         st.session_state.cache_stats["miss_count"] += 1
         return None
     
-    try:
-        with open(cache_path, 'rb') as f:
-            cached_item = pickle.load(f)
-        
-        # 检查缓存是否过期
-        if time.time() > cached_item["expiry"]:
-            # 更新缓存统计信息
-            if 'cache_stats' not in st.session_state:
-                st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
-            st.session_state.cache_stats["miss_count"] += 1
-            return None
-        
-        # 缓存命中
-        if 'cache_stats' not in st.session_state:
-            st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
-        st.session_state.cache_stats["hit_count"] += 1
-        return cached_item["data"]
+    cached_item = st.session_state.cache_data[cache_key]
     
-    except (pickle.PickleError, EOFError, KeyError):
-        # 缓存文件损坏，删除它
-        cache_path.unlink(missing_ok=True)
+    # 检查缓存是否过期
+    if time.time() > cached_item["expiry"]:
+        # 删除过期缓存
+        del st.session_state.cache_data[cache_key]
+        st.session_state.cache_stats["miss_count"] += 1
         return None
+    
+    # 缓存命中
+    st.session_state.cache_stats["hit_count"] += 1
+    return cached_item["data"]
 
 def clear_expired_cache():
-    """清理所有过期的缓存文件"""
+    """清理所有过期的缓存"""
     current_time = time.time()
     cleared_count = 0
     
-    for cache_file in CACHE_DIR.glob("*.pkl"):
-        try:
-            with open(cache_file, 'rb') as f:
-                cached_item = pickle.load(f)
-            
-            if current_time > cached_item["expiry"]:
-                cache_file.unlink()
-                cleared_count += 1
-        except:
-            # 如果文件损坏，直接删除
-            cache_file.unlink(missing_ok=True)
+    for cache_key in list(st.session_state.cache_data.keys()):
+        if current_time > st.session_state.cache_data[cache_key]["expiry"]:
+            del st.session_state.cache_data[cache_key]
             cleared_count += 1
     
     return cleared_count
 
 def clear_all_cache():
-    """清理所有缓存文件"""
-    count = 0
-    for cache_file in CACHE_DIR.glob("*.pkl"):
-        cache_file.unlink(missing_ok=True)
-        count += 1
+    """清理所有缓存"""
+    count = len(st.session_state.cache_data)
+    st.session_state.cache_data = {}
     
     # 重置缓存统计信息
-    if 'cache_stats' in st.session_state:
-        st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
+    st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
     
     return count
 
@@ -342,19 +308,19 @@ def process_batch_query(df, part_number_column, max_workers=3):
     else:
         return None
 
-# 用户反馈数据存储的函数
+# 用户反馈数据存储的函数 - 改为内存存储
 def save_feedback(part_number, feedback_score, feedback_text=""):
     """
-    保存用户对查询结果的反馈
+    保存用户对查询结果的反馈到会话状态中
     
     Args:
         part_number (str): 查询的元器件型号
         feedback_score (int): 评分 (1-5)
         feedback_text (str): 用户的详细反馈意见
     """
-    # 确保反馈目录存在
-    FEEDBACK_DIR = Path("feedback")
-    FEEDBACK_DIR.mkdir(exist_ok=True)
+    # 初始化反馈存储
+    if 'user_feedback' not in st.session_state:
+        st.session_state.user_feedback = []
     
     feedback_data = {
         "part_number": part_number,
@@ -363,24 +329,8 @@ def save_feedback(part_number, feedback_score, feedback_text=""):
         "feedback_text": feedback_text
     }
     
-    # 使用JSON格式存储反馈数据
-    feedback_file = FEEDBACK_DIR / f"feedback_{datetime.now().strftime('%Y%m%d')}.json"
-    
-    # 读取现有反馈数据
-    existing_feedback = []
-    if feedback_file.exists():
-        try:
-            with open(feedback_file, 'r', encoding='utf-8') as f:
-                existing_feedback = json.load(f)
-        except json.JSONDecodeError:
-            existing_feedback = []
-    
-    # 添加新的反馈
-    existing_feedback.append(feedback_data)
-    
-    # 保存更新后的反馈数据
-    with open(feedback_file, 'w', encoding='utf-8') as f:
-        json.dump(existing_feedback, f, ensure_ascii=False, indent=2)
+    # 添加到session_state
+    st.session_state.user_feedback.append(feedback_data)
     
     # 更新反馈统计信息
     if 'feedback_stats' not in st.session_state:
@@ -389,13 +339,7 @@ def save_feedback(part_number, feedback_score, feedback_text=""):
     st.session_state.feedback_stats["total"] += 1
     
     # 重新计算平均分数
-    all_feedbacks = []
-    for fb_file in FEEDBACK_DIR.glob("feedback_*.json"):
-        try:
-            with open(fb_file, 'r', encoding='utf-8') as f:
-                all_feedbacks.extend(json.load(f))
-        except:
-            pass
+    all_feedbacks = st.session_state.user_feedback
     
     if all_feedbacks:
         avg_score = sum(fb["score"] for fb in all_feedbacks) / len(all_feedbacks)
@@ -406,16 +350,10 @@ def get_feedback_stats():
     """获取反馈统计信息"""
     if 'feedback_stats' not in st.session_state:
         # 初始化反馈统计
-        FEEDBACK_DIR = Path("feedback")
-        FEEDBACK_DIR.mkdir(exist_ok=True)
-        
-        all_feedbacks = []
-        for fb_file in FEEDBACK_DIR.glob("feedback_*.json"):
-            try:
-                with open(fb_file, 'r', encoding='utf-8') as f:
-                    all_feedbacks.extend(json.load(f))
-            except:
-                pass
+        if 'user_feedback' not in st.session_state:
+            st.session_state.user_feedback = []
+            
+        all_feedbacks = st.session_state.user_feedback
         
         if all_feedbacks:
             avg_score = sum(fb["score"] for fb in all_feedbacks) / len(all_feedbacks)
