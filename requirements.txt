@@ -4,5 +4,3 @@ python-dotenv
 pandas
 xlsxwriter
 pathlib
-hashlib
-pickle5
