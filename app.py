@@ -5,10 +5,8 @@ import re
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-import hashlib
 import pandas as pd
 import io
-import time  # 添加time模块导入
 from concurrent.futures import ThreadPoolExecutor
 
 # 加载环境变量
@@ -27,75 +25,6 @@ try:
 except Exception as e:
     st.error(f"初始化 DeepSeek API 客户端失败：{e}")
     st.stop()
-
-# 初始化内存缓存
-if 'cache_data' not in st.session_state:
-    st.session_state.cache_data = {}  # 用于存储缓存数据
-if 'cache_stats' not in st.session_state:
-    st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
-
-# 缓存管理函数 - 使用内存而非文件系统
-def get_cache_key(part_number):
-    """根据元器件型号生成唯一缓存键"""
-    return hashlib.md5(part_number.lower().strip().encode()).hexdigest()
-
-def save_to_cache(part_number, data, expiry_hours=72):
-    """将查询结果保存到内存缓存"""
-    cache_key = get_cache_key(part_number)
-    
-    cached_item = {
-        "part_number": part_number,
-        "data": data,
-        "timestamp": time.time(),
-        "expiry": time.time() + (expiry_hours * 3600)  # 默认缓存72小时
-    }
-    
-    # 保存到session_state中
-    st.session_state.cache_data[cache_key] = cached_item
-    st.session_state.cache_stats["total_entries"] = len(st.session_state.cache_data)
-
-def get_from_cache(part_number):
-    """尝试从内存缓存获取结果，如果有效则返回，否则返回None"""
-    cache_key = get_cache_key(part_number)
-    
-    if cache_key not in st.session_state.cache_data:
-        st.session_state.cache_stats["miss_count"] += 1
-        return None
-    
-    cached_item = st.session_state.cache_data[cache_key]
-    
-    # 检查缓存是否过期
-    if time.time() > cached_item["expiry"]:
-        # 删除过期缓存
-        del st.session_state.cache_data[cache_key]
-        st.session_state.cache_stats["miss_count"] += 1
-        return None
-    
-    # 缓存命中
-    st.session_state.cache_stats["hit_count"] += 1
-    return cached_item["data"]
-
-def clear_expired_cache():
-    """清理所有过期的缓存"""
-    current_time = time.time()
-    cleared_count = 0
-    
-    for cache_key in list(st.session_state.cache_data.keys()):
-        if current_time > st.session_state.cache_data[cache_key]["expiry"]:
-            del st.session_state.cache_data[cache_key]
-            cleared_count += 1
-    
-    return cleared_count
-
-def clear_all_cache():
-    """清理所有缓存"""
-    count = len(st.session_state.cache_data)
-    st.session_state.cache_data = {}
-    
-    # 重置缓存统计信息
-    st.session_state.cache_stats = {"total_entries": 0, "hit_count": 0, "miss_count": 0}
-    
-    return count
 
 def extract_json_content(content):
     """增强的JSON提取函数，使用多种方法尝试从文本中提取有效的JSON"""
@@ -165,12 +94,6 @@ def get_alternative_parts(part_number):
     # 清理输入，移除多余的空格
     clean_part_number = part_number.strip()
     
-    # 首先检查缓存中是否有结果
-    cached_results = get_from_cache(clean_part_number)
-    if cached_results is not None:
-        st.sidebar.success("✅ 已从缓存中获取结果")
-        return cached_results
-    
     # 构造提示，要求返回 JSON 格式的推荐结果
     prompt = f"""
     任务：你是一个专业的电子元器件顾问，专精于国产替代方案。请为以下元器件推荐替代产品。
@@ -198,6 +121,7 @@ def get_alternative_parts(part_number):
     
     try:
         # 记录API调用开始时间
+        import time
         start_time = time.time()
         
         # 调用 DeepSeek API
@@ -225,9 +149,6 @@ def get_alternative_parts(part_number):
         
         # 使用增强的JSON提取函数处理响应内容
         recommendations = extract_json_content(raw_content.strip())
-        
-        # 将结果保存到缓存
-        save_to_cache(clean_part_number, recommendations)
         
         return recommendations
         
@@ -413,8 +334,10 @@ def render_feedback_ui(part_number, container=None):
         if st.button("😊 非常满意", key=f"rating_5_{part_number}"):
             submit_rating(5)
     
-    # 添加详细反馈文本框
-    feedback_text = container.text_area("您有什么具体的建议或意见吗?", key=f"feedback_text_{part_number}")
+    # 添加详细反馈文本框 - 修复空标签问题，添加一个标签名称
+    feedback_text = container.text_area("反馈意见", 
+                                       placeholder="您有什么具体的建议或意见吗?", 
+                                       key=f"feedback_text_{part_number}")
     
     if container.button("提交详细反馈", key=f"submit_feedback_{part_number}"):
         # 如果用户没有评分就直接提交文本反馈，默认为3分
@@ -737,7 +660,8 @@ with st.container():
         col1, col2 = st.columns([3, 1])
         with col1:
             st.markdown('<div class="search-input">', unsafe_allow_html=True)
-            part_number = st.text_input("", placeholder="输入元器件型号，例如：STM32F103C8", label_visibility="collapsed")
+            # 修复空标签问题，添加一个标签名称
+            part_number = st.text_input("元器件型号", placeholder="输入元器件型号，例如：STM32F103C8", label_visibility="collapsed")
             st.markdown('</div>', unsafe_allow_html=True)
         with col2:
             st.markdown('<div class="search-button">', unsafe_allow_html=True)
@@ -753,7 +677,6 @@ with st.container():
         
         # 文件上传控件
         uploaded_file = st.file_uploader("选择Excel或CSV文件", type=["xlsx", "xls", "csv"])
-        
         if uploaded_file is not None:
             try:
                 # 根据文件类型读取数据
@@ -772,12 +695,10 @@ with st.container():
                 
                 # 批量查询按钮
                 batch_button = st.button("开始批量查询", use_container_width=True, key="batch_query_button")
-                
                 if batch_button:
                     # 处理批量查询
                     with st.spinner("正在批量处理元器件查询，请稍候..."):
                         result_df = process_batch_query(df, selected_column)
-                        
                         if result_df is not None and not result_df.empty:
                             # 保存结果到会话状态便于导出
                             st.session_state.batch_results = result_df
@@ -823,13 +744,12 @@ with st.container():
                 
             except Exception as e:
                 st.error(f"处理文件时出错: {str(e)}")
-                st.info("请确保上传的是有效的Excel或CSV文件，并且含有元器件型号列。")
+        else:
+            st.info("请确保上传的是有效的Excel或CSV文件，并且含有元器件型号列。")
         
         # 使用说明
         with st.expander("批量查询使用说明"):
-            st.markdown("""
-            ### 批量查询使用说明
-            
+            st.markdown("""### 批量查询使用说明
             1. **准备文件**：创建Excel或CSV文件，其中包含需要查询的元器件型号列表
             2. **上传文件**：使用上方的上传按钮选择文件
             3. **选择列**：在下拉菜单中选择包含元器件型号的列名
@@ -838,10 +758,9 @@ with st.container():
             
             **注意**：
             - 批量查询可能需要较长时间，请耐心等待
-            - 查询速度受API限制，系统会自动进行缓存以提高效率
             - 对于未找到替代方案的型号，将显示"未找到替代方案"
             """)
-    
+        st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # 在此处添加历史查询功能
@@ -893,7 +812,6 @@ if search_button:
                     <p>请尝试修改搜索关键词或查询其他型号</p>
                 </div>
                 """, unsafe_allow_html=True)
-                
             st.markdown('</div>', unsafe_allow_html=True)
             
             # 添加反馈界面
@@ -933,7 +851,7 @@ with st.expander("📜 历史查询记录", expanded=False):
                 if st.button(f"查看", key=f"view_history_{idx}"):
                     st.session_state.selected_history = history_item
                     st.experimental_rerun()
-    
+        st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # 显示选中的历史记录
@@ -948,7 +866,6 @@ if 'selected_history' in st.session_state:
     
     # 结果区域添加容器
     st.markdown('<div class="results-container">', unsafe_allow_html=True)
-    
     if recommendations:
         # 创建三列布局
         cols = st.columns(min(3, len(recommendations)))
@@ -972,7 +889,7 @@ if 'selected_history' in st.session_state:
             <p>请尝试修改搜索关键词或查询其他型号</p>
         </div>
         """, unsafe_allow_html=True)
-        
+        st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # 添加反馈界面
@@ -984,5 +901,4 @@ if 'selected_history' in st.session_state:
         st.experimental_rerun()
 
 # 添加页脚信息 - 降低显示度
-st.markdown("---")
 st.markdown('<p class="footer-text">💡 本工具基于深度学习模型，提供元器件替代参考，实际使用请结合专业工程师评估</p>', unsafe_allow_html=True)
