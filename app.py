@@ -5,9 +5,7 @@ import re
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-import pandas as pd
-import io
-from concurrent.futures import ThreadPoolExecutor
+import time
 
 # 加载环境变量
 load_dotenv()
@@ -121,7 +119,6 @@ def get_alternative_parts(part_number):
     
     try:
         # 记录API调用开始时间
-        import time
         start_time = time.time()
         
         # 调用 DeepSeek API
@@ -156,78 +153,6 @@ def get_alternative_parts(part_number):
         st.error(f"API 调用失败：{e}")
         st.sidebar.error(f"详细错误信息：{str(e)}")
         return []
-
-# 添加批量查询处理函数
-def process_batch_query(df, part_number_column, max_workers=3):
-    """
-    批量处理多个元器件型号，并返回结果DataFrame
-    
-    Args:
-        df (pandas.DataFrame): 包含元器件型号的数据框
-        part_number_column (str): 数据框中包含元器件型号的列名
-        max_workers (int): 最大并行处理线程数
-    
-    Returns:
-        pandas.DataFrame: 包含批量查询结果的数据框
-    """
-    # 检查列是否存在
-    if part_number_column not in df.columns:
-        st.error(f"未在上传的文件中找到列 '{part_number_column}'")
-        return None
-    
-    # 获取所有元器件型号并去重
-    part_numbers = df[part_number_column].astype(str).str.strip().dropna().unique()
-    
-    # 初始化结果
-    results = []
-    total_parts = len(part_numbers)
-    
-    # 创建进度条
-    progress_bar = st.progress(0)
-    progress_text = st.empty()
-    progress_text.text(f"正在处理: 0/{total_parts} 完成...")
-    
-    # 定义处理单个元器件的函数
-    def process_single_part(index, part):
-        # 更新进度信息
-        progress_text.text(f"正在处理: {index+1}/{total_parts} - 当前: {part}")
-        
-        # 查询替代方案
-        alternatives = get_alternative_parts(part)
-        
-        # 将查询结果添加到列表中
-        if alternatives and len(alternatives) > 0:
-            for alt in alternatives:
-                results.append({
-                    "查询型号": part,
-                    "替代型号": alt.get("model", "未知"),
-                    "类型": alt.get("type", "未知"),
-                    "参数": alt.get("parameters", ""),
-                    "数据手册": alt.get("datasheet", "")
-                })
-        else:
-            # 没有找到替代方案，仍然记录
-            results.append({
-                "查询型号": part,
-                "替代型号": "未找到替代方案",
-                "类型": "-",
-                "参数": "-",
-                "数据手册": "-"
-            })
-        
-        # 更新进度条
-        progress_bar.progress((index + 1) / total_parts)
-    
-    # 处理所有元器件型号
-    for i, part in enumerate(part_numbers):
-        process_single_part(i, part)
-    
-    # 将结果转换为DataFrame
-    if results:
-        result_df = pd.DataFrame(results)
-        return result_df
-    else:
-        return None
 
 # 用户反馈数据存储的函数 - 改为内存存储
 def save_feedback(part_number, feedback_score, feedback_text=""):
@@ -648,119 +573,23 @@ st.markdown('<div class="header-container">', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">BOM 元器件国产替代推荐工具</h1>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 搜索区域 - 修改结构，确保输入框和按钮完全匹配
+# 搜索区域 - 修改结构，删除选项卡，只保留单个查询功能
 with st.container():
     st.markdown('<div class="search-area">', unsafe_allow_html=True)
     
-    # 使用选项卡分离单个查询和批量查询功能
-    tab1, tab2 = st.tabs(["单个查询", "批量查询"])
-    
-    with tab1:
-        st.markdown('<div class="search-container">', unsafe_allow_html=True)
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.markdown('<div class="search-input">', unsafe_allow_html=True)
-            # 修复空标签问题，添加一个标签名称
-            part_number = st.text_input("元器件型号", placeholder="输入元器件型号，例如：STM32F103C8", label_visibility="collapsed")
-            st.markdown('</div>', unsafe_allow_html=True)
-        with col2:
-            st.markdown('<div class="search-button">', unsafe_allow_html=True)
-            search_button = st.button("🔍 查询替代方案", use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+    # 移除选项卡，直接显示搜索框和按钮
+    st.markdown('<div class="search-container">', unsafe_allow_html=True)
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown('<div class="search-input">', unsafe_allow_html=True)
+        part_number = st.text_input("元器件型号", placeholder="输入元器件型号，例如：STM32F103C8", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
-    
-    with tab2:
-        st.markdown("<h3>批量查询元器件替代方案</h3>", unsafe_allow_html=True)
-        
-        # 上传文件说明
-        st.write("上传包含元器件型号的Excel或CSV文件，系统将自动为每个型号查询替代方案。")
-        
-        # 文件上传控件
-        uploaded_file = st.file_uploader("选择Excel或CSV文件", type=["xlsx", "xls", "csv"])
-        if uploaded_file is not None:
-            try:
-                # 根据文件类型读取数据
-                if uploaded_file.name.endswith('.csv'):
-                    df = pd.read_csv(uploaded_file)
-                else:
-                    df = pd.read_excel(uploaded_file)
-                
-                # 显示上传的数据表格预览
-                st.write("文件预览:")
-                st.dataframe(df.head(5))
-                
-                # 选择包含元器件型号的列
-                column_options = df.columns.tolist()
-                selected_column = st.selectbox("请选择包含元器件型号的列", column_options)
-                
-                # 批量查询按钮
-                batch_button = st.button("开始批量查询", use_container_width=True, key="batch_query_button")
-                if batch_button:
-                    # 处理批量查询
-                    with st.spinner("正在批量处理元器件查询，请稍候..."):
-                        result_df = process_batch_query(df, selected_column)
-                        if result_df is not None and not result_df.empty:
-                            # 保存结果到会话状态便于导出
-                            st.session_state.batch_results = result_df
-                            
-                            # 显示查询结果
-                            st.success(f"✅ 查询完成! 共为 {len(df[selected_column].dropna().unique())} 个型号查询了替代方案")
-                            
-                            # 显示汇总统计
-                            found_count = result_df[result_df["替代型号"] != "未找到替代方案"].shape[0]
-                            st.write(f"- 找到替代方案的型号数量: {found_count}")
-                            st.write(f"- 总替代方案数量: {result_df.shape[0]}")
-                            domestic_count = result_df[result_df["类型"].str.contains("国产", na=False)].shape[0]
-                            st.write(f"- 国产替代方案数量: {domestic_count}")
-                            
-                            # 显示结果表格
-                            st.subheader("查询结果")
-                            st.dataframe(result_df)
-                            
-                            # 提供CSV/Excel导出选项
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                csv = result_df.to_csv(index=False).encode('utf-8')
-                                st.download_button(
-                                    label="📥 下载CSV格式",
-                                    data=csv,
-                                    file_name=f"元器件替代方案查询结果_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                                    mime="text/csv",
-                                )
-                            
-                            with col2:
-                                output = io.BytesIO()
-                                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                                    result_df.to_excel(writer, index=False, sheet_name='元器件替代方案')
-                                excel_data = output.getvalue()
-                                st.download_button(
-                                    label="📥 下载Excel格式",
-                                    data=excel_data,
-                                    file_name=f"元器件替代方案查询结果_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                                    mime="application/vnd.ms-excel"
-                                )
-                        else:
-                            st.error("批量查询未返回任何结果，请检查元器件型号列是否正确。")
-                
-            except Exception as e:
-                st.error(f"处理文件时出错: {str(e)}")
-        else:
-            st.info("请确保上传的是有效的Excel或CSV文件，并且含有元器件型号列。")
-        
-        # 使用说明
-        with st.expander("批量查询使用说明"):
-            st.markdown("""### 批量查询使用说明
-            1. **准备文件**：创建Excel或CSV文件，其中包含需要查询的元器件型号列表
-            2. **上传文件**：使用上方的上传按钮选择文件
-            3. **选择列**：在下拉菜单中选择包含元器件型号的列名
-            4. **开始查询**：点击"开始批量查询"按钮，系统将处理所有型号
-            5. **查看结果**：处理完成后，可以查看结果表格并下载
-            
-            **注意**：
-            - 批量查询可能需要较长时间，请耐心等待
-            - 对于未找到替代方案的型号，将显示"未找到替代方案"
-            """)
+    with col2:
+        st.markdown('<div class="search-button">', unsafe_allow_html=True)
+        search_button = st.button("🔍 查询替代方案", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 # 在此处添加历史查询功能
