@@ -47,33 +47,25 @@ def render_ui(get_alternative_parts_func):
             text-shadow: 0 4px 10px rgba(26, 115, 232, 0.1);
         }
         
-        /* 添加标题装饰 - 减小装饰条尺寸 */
+        /* 修改标题装饰 - 完全删除装饰条 */
         .header-container {
             position: relative;
             padding: 0 1rem;
             margin-bottom: 1rem; /* 减小底部外边距 */
         }
         
-        .header-container::before, 
-        .header-container::after {
-            content: "";
-            position: absolute;
-            height: 2px; /* 减小高度 */
-            width: 60px;
-            background: linear-gradient(90deg, #1a73e8, #6c5ce7);
-            border-radius: 3px;
-            left: 50%;
-            transform: translateX(-50%);
+        /* 使标签面板与页面背景色保持一致，移除边框和阴影 */
+        .stTabs [data-baseweb="tab-panel"] {
+            background-color: transparent !important; 
+            border: none !important;
+            box-shadow: none !important;
+            padding-top: 0.5rem !important;
         }
         
-        .header-container::before {
-            top: 5px; /* 减小距离 */
-            width: 80px; /* 减小宽度 */
-        }
-        
-        .header-container::after {
-            bottom: 2px; /* 减小距离 */
-            width: 160px; /* 减小宽度 */
+        /* 修改标签样式，使其更加突出 */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 30px !important;
+            margin-bottom: 5px !important;
         }
         
         /* 搜索区域样式改进 - 减小内边距 */
@@ -131,13 +123,13 @@ def render_ui(get_alternative_parts_func):
         div.css-1r6slb0.e1tzin5v2 > *, div.css-keje6w.e1tzin5v2 > * {
             width: 100%;
             margin: 0 !important;
-            padding: 0 !重要;
+            padding: 0 !important;
         }
         
         /* 输入框容器调整 */
         .stTextInput {
             margin: 0 !important;
-            padding: 0 !important;
+mportant              paddimportantg: 0 !important;
         }
         
         .stTextInput > div {
@@ -181,7 +173,7 @@ def render_ui(get_alternative_parts_func):
         
         /* 移除输入框的标签 */
         .stTextInput > label {
-            display: none !重要;
+            display: none !important;
         }
         
         /* 输入框容器调整 */
@@ -201,7 +193,7 @@ def render_ui(get_alternative_parts_func):
         /* 按钮样式 - 确保与输入框完全匹配 */
         .stButton {
             height: 65px; /* 与输入框相同的固定高度 */
-            margin-bottom: 0 !important;
+            margin-bottomimportant0 !important;
             margin-top: 0; /* 移除顶部间距 */
         }
         
@@ -224,9 +216,9 @@ def render_ui(get_alternative_parts_func):
         
         /* 修复按钮和输入框的列对齐 */
         div[data-testid="column"] {
-            padding: 0 !important;
-            display: flex !important;
-            align-items: center !重要;
+            padding重要0 !important;
+            display: f重要x !important;
+            align-items: center !important;
         }
         
         /* 确保每个列子元素垂直居中且不溢出 */
@@ -234,8 +226,8 @@ def render_ui(get_alternative_parts_func):
             width: 100%;
             display: flex;
             align-items: center;
-            padding: 0 !important;
-            margin: 0 !重要;
+            paddin重要 0 !important;
+            margin: 0 !important;
         }
         
         /* 新的结果卡片样式 - 调整大小更紧凑 */
@@ -409,7 +401,7 @@ def render_ui(get_alternative_parts_func):
         .results-container {
             max-width: 1100px;
             margin: 0 auto 1.5rem auto; /* 减小底部外边距 */
-            margin-top: 0.5rem !important; /* 减少顶部边距 */
+            margin-top: 0.5重要m !important; /* 减少顶部边距 */
         }
         
         /* 警告框样式 - 减小尺寸 */
@@ -425,15 +417,15 @@ def render_ui(get_alternative_parts_func):
         
         /* 隐藏Streamlit默认的元素 */
         .css-1544g2n.e1tzin5v3 {
-            padding-top: 0 !important;
+            padding-top重要0 !important;
         }
         
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         
         .stExpander {
-            border: none !important;
-            box-shadow: none !重要;
+            border: 重要ne !important;
+            box-shadow: none !important;
         }
         
         /* 修复streamlit列对齐问题 */
@@ -441,25 +433,25 @@ def render_ui(get_alternative_parts_func):
             padding: 0 !important;
             margin: 0 !important;
             display: flex !important;
-            align-items: stretch !重要; /* 确保列拉伸以匹配高度 */
-            height: 100% !重要;
+            align-items: stretch !important; /* 确保列拉伸以匹配高度 */
+            height: 100% !important;
         }
         
         div[data-testid="column"] > div {
             width: 100%;
-            padding: 0.3rem !重要; /* 添加小间距 */
+            padding: 0.3rem !important; /* 添加小间距 */
             box-sizing: border-box;
         }
         
         /* 确保所有卡片等高 */
         div[data-testid="stHorizontalBlock"] {
-            align-items: stretch !重要; /* 确保块内元素拉伸 */
-            display: flex !重要;
+            align-items: stretch !important; /* 确保块内元素拉伸 */
+            display: flex !important;
         }
         
         /* 标签页样式调整 - 减少空间占用 */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 30px !important; /* 增加标签页之间的间距 */
+            gap: 3重要x !important; /* 增加标签页之间的间距 */
             margin-bottom: 10px;
         }
         
@@ -481,17 +473,17 @@ def render_ui(get_alternative_parts_func):
         
         /* 减少整体页面的内边距 */
         .block-container {
-            padding-top: 1rem !重要;
-            padding-bottom: 1rem !重要;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
             max-width: 1200px;
-            padding-left: 1.5rem !重要;
-            padding-right: 1.5rem !重要;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
         }
         
         /* 减少standard垂直间距 */
         .css-1kyxreq {
-            margin-top: 0.5rem !重要;
-            margin-bottom: 0.5rem !重要;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
         }
         
         /* 为Streamlit的elements减少垂直间距 */
@@ -503,7 +495,7 @@ def render_ui(get_alternative_parts_func):
         .result-card {
             padding: 1.2rem;
             border-radius: 0.8rem;
-            height: 100% !重要; /* 强制相同高度 */
+            height: 100% !important; /* 强制相同高度 */
             min-height: 450px; /* 墛大最小高度 */
             max-height: 450px; /* 墛大最大高度 */
             box-shadow: 0 8px 20px rgba(0,0,0,0.07);
@@ -519,7 +511,7 @@ def render_ui(get_alternative_parts_func):
         
         /* 让卡片容器也保持等高 */
         div.css-1r6slb0.e1tzin5v2 {
-            height: 100% !重要;
+            height: 100% !important;
         }
         
         /* 确保列也是等高的 */
@@ -584,21 +576,21 @@ def render_ui(get_alternative_parts_func):
         
         /* 调整标签页间距 */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 30px !important;
+            3重要x 3重要x !important;
             margin-bottom: 10px;
         }
         
         /* 减小成功消息与搜索框之间的距离 */
         .st-emotion-cache-16idsys p {
             margin-top: -5px !important;  /* 减小顶部边距 */
-            padding-top: 5px !重要;
-            padding-bottom: 5px !重要;
+            padding-top: 5px !important;
+            padding-bottom: 5px !important;
         }
         
         /* 成功框样式 */
         .success-box {
-            margin-top: 0.5rem !重要;
-            margin-bottom: 0.5rem !重要;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
             padding: 0.5rem !重要;
         }
         
@@ -706,8 +698,8 @@ def render_ui(get_alternative_parts_func):
         
         /* 减少成功消息与结果之间的距离 */
         .st-emotion-cache-16idsys p {
-            margin-top: -5px !important;
-            padding-top: 5px !important;
+            margin-top: -重要x !重要;
+            padding-top: 重要x !重要;
             padding-bottom: 5px !重要;
         }
         
@@ -878,8 +870,8 @@ def render_ui(get_alternative_parts_func):
         
         /* 修改AI对话按钮样式，使其与查询按钮区分 */
         .ai-chat-button > button {
-            background: linear-gradient(90deg, #4caf50, #45a049) !important;
-            color: white !important;
+            background: linear-gradient(90deg, #4caf50, #45a0重要) !important;
+            color: wh重要e !important;
         }
         
         /* 对话弹窗样式 */
@@ -888,6 +880,28 @@ def render_ui(get_alternative_parts_func):
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 800px;
+            height: 80vh;
+            max-height: 600px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 9999;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 对话框背景遮罩 */
+        .dialog-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9998;
             width: 80%;
             max-width: 800px;
             height: 80vh;
@@ -1017,9 +1031,9 @@ def render_ui(get_alternative_parts_func):
             padding: 0.3rem 0.7rem !important;
             margin: 0.25rem 0.15rem !important;
             min-height: unset !important;
-            height: auto !important;
-            line-height: 1.2 !important;
-            white-space: normal !important;
+            height: auto !重要;
+            line-height: 1.2 !重要;
+            white-space: normal !重要;
         }
         
         .preset-question-btn:hover {
@@ -1031,7 +1045,7 @@ def render_ui(get_alternative_parts_func):
         
         /* 预设问题容器 */
         .preset-questions-container {
-            margin-top: 5px !important;
+            margin-top: 5px !重要;
             margin-bottom: 15px !重要;
             display: flex;
             flex-wrap: wrap;
@@ -1051,7 +1065,7 @@ def render_ui(get_alternative_parts_func):
         .faq-title {
             font-size: 0.9rem;
             color: #666;
-            margin: 5px 0 !important;
+            margin: 5px 0 !重要;
             font-weight: normal;
         }
         
@@ -1117,6 +1131,83 @@ def render_ui(get_alternative_parts_func):
             min-height: 100px;
             max-height: 200px;
             overflow-y: auto;
+        }
+        
+        /* 常见问题按钮样式 - 修改为白色背景 */
+        div[data-testid="stButton"] > button {
+            border-radius: 0.8rem;
+            font-weight: 600;
+            font-size: 1.5rem;
+            border: none;
+            background: linear-gradient(90deg, #1a73e8, #4285f4);
+            color: white;
+            transition: all 0.3s;
+            height: 65px;
+            width: 100%;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 专门针对常见问题按钮的样式覆盖 */
+        div.preset-questions-container div[data-testid="stButton"] > button {
+            background: #ffffff !重要; /* 白色背景 */
+            color: #1a73e8 !重要; 
+            border: 1px solid #cce4ff !重要;
+            font-size: 0.9rem !重要;
+            height: auto !重要;
+            padding: 8px 12px !重要;
+        }
+        
+        /* 墛大对话输入框样式 */
+        .stChatInput textarea, .stChatInput input {
+            font-size: 1.1rem !重要;
+            padding: 15px !重要;
+            height: 60px !重要;
+            border-radius: 15px !重要;
+            border: 2px solid #b3d1ff !重要;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.1) !重要;
+        }
+        
+        /* 让输入框在聊天对话区域更加突出 */
+        .stChatInput {
+            margin-top: 15px !重要;
+            margin-bottom: 15px !重要;
+            padding: 5px !重要;
+        }
+        
+        /* 处理输入框的提示文字 */
+        .stChatInput textarea::placeholder, .stChatInput input::placeholder {
+            color: #8c9bb5 !重要;
+            font-size: 1.1rem !重要;
+        }
+        
+        /* 对话输入框获得焦点时的样式 */
+        .stChatInput textarea:focus, .stChatInput input:focus {
+            border-color: #1a73e8 !重要;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.2) !重要;
+        }
+        
+        /* 发送按钮样式优化 */
+        .stChatInput button {
+            background-color: #1a73e8 !重要;
+            color: white !重要;
+            border-radius: 50% !重要;
+            width: 40px !重要;
+            height: 40px !重要;
+            display: flex !重要;
+            align-items: center !重要;
+            justify-content: center !重要;
+            margin-right: 5px !重要;
+            margin-top: 10px !重要;
+        }
+        
+        /* 对话内容区域样式增强 */
+        .stChatMessage {
+            padding: 12px !重要;
+            border-radius: 12px !重要;
+            margin-bottom: 10px !重要;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1205,9 +1296,9 @@ def render_ui(get_alternative_parts_func):
             # 如果上传了文件，尝试预览
             try:
                 if uploaded_file.name.endswith('.csv'):
-                    df_preview = pd.read_csv(uploaded_file, nrows=5)
+                    df_preview = pd.read_csv(uploaded_file)  # 移除nrows=5限制，显示所有行
                 else:
-                    df_preview = pd.read_excel(uploaded_file, nrows=5)
+                    df_preview = pd.read_excel(uploaded_file)  # 移除nrows=5限制，显示所有行
                 
                 with st.expander("查看BOM文件预览", expanded=True):
                     st.dataframe(df_preview)
@@ -1384,7 +1475,7 @@ def render_ui(get_alternative_parts_func):
                     st.session_state.show_chat = False
                     st.rerun()
             
-            # 显示欢迎消息和预设问题（始终显示，无论是否有对话历史）
+            # 显示欢迎消息（始终显示，无论是否有对话历史）
             if len(st.session_state.chat_messages) == 0:
                 st.markdown("""
                 <div class="welcome-message">
@@ -1393,7 +1484,16 @@ def render_ui(get_alternative_parts_func):
                 </div>
                 """, unsafe_allow_html=True)
             
-            # 预设问题区域 - 无论是否有历史都显示
+            # 显示对话历史记录
+            for message in st.session_state.chat_messages:
+                if message["role"] == "user":
+                    with st.chat_message("user"):
+                        st.markdown(message["content"])
+                else:
+                    with st.chat_message("assistant"):
+                        st.markdown(message["content"])
+            
+            # 预设问题区域 - 移动到这里，在对话历史和用户输入之间
             st.markdown('<div class="preset-questions-container">', unsafe_allow_html=True)
             
             # 修改为更明显的样式，确保按钮足够突出
@@ -1473,15 +1573,6 @@ def render_ui(get_alternative_parts_func):
                 st.rerun()
                 
             st.markdown('</div>', unsafe_allow_html=True)
-            
-            # 显示对话历史记录
-            for message in st.session_state.chat_messages:
-                if message["role"] == "user":
-                    with st.chat_message("user"):
-                        st.markdown(message["content"])
-                else:
-                    with st.chat_message("assistant"):
-                        st.markdown(message["content"])
             
             # 用户输入
             user_input = st.chat_input("请输入您的问题...")

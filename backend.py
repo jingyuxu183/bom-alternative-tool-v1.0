@@ -439,8 +439,11 @@ def get_alternative_parts(part_number):
                 rec["type"] = "国产"
 
         # Step 6: 如果仍然不足 3 个，或缺少国产方案，重新调用 DeepSeek 强调国产优先
-        if len(recommendations) < 3 or not any(rec["type"] == "国产" for rec in recommendations):
+        need_second_query = len(recommendations) < 3 or not any(rec["type"] == "国产" for rec in recommendations)
+        
+        if need_second_query:
             st.warning("⚠️ 推荐结果不足或未包含国产方案，将重新调用 DeepSeek 推荐。")
+            
             prompt_retry = f"""
             任务：为以下元器件推荐替代产品，推荐的替代方案必须与输入型号 {part_number} 不同（绝对不能推荐 {part_number} 或其变体，如 {part_number} 的不同封装）。
             输入元器件型号：{part_number}
@@ -471,7 +474,11 @@ def get_alternative_parts(part_number):
             11. 每个推荐项必须包含 "model"、"brand"、"category"、"package"、"parameters"、"type" 和 "datasheet" 七个字段
             12. 如果无法找到合适的替代方案，返回空的 JSON 数组：[]
             """
-            max_retries = 3 - len(recommendations)
+            
+            second_query_success = False
+            max_retries = 3
+            additional_recommendations = []
+            
             for attempt in range(max_retries):
                 try:
                     response_retry = deepseek_client.chat.completions.create(
@@ -484,48 +491,70 @@ def get_alternative_parts(part_number):
                         max_tokens=1000
                     )
                     raw_content_retry = response_retry.choices[0].message.content
-                    additional_recommendations = extract_json_content(raw_content_retry, f"重新调用，第 {attempt + 1} 次")
+                    
+                    with st.spinner(f"正在解析第 {attempt + 1} 次二次查询结果..."):
+                        additional_recommendations = extract_json_content(raw_content_retry, f"重新调用，第 {attempt + 1} 次")
+                    
                     if additional_recommendations:
+                        second_query_success = True
+                        # 过滤掉与原型号相同的推荐
+                        additional_recommendations = [rec for rec in additional_recommendations if rec["model"].lower() != part_number.lower()]
+                        
+                        # 快速检查是否找到了国产方案
+                        found_domestic = False
+                        for rec in additional_recommendations:
+                            if rec["type"] == "未知" and is_domestic_brand(rec["model"]):
+                                rec["type"] = "国产"
+                            if rec["type"] == "国产":
+                                found_domestic = True
+                        
+                        # 记录二次查询结果
+                        if found_domestic:
+                            st.success(f"✅ 二次查询成功！找到了 {len(additional_recommendations)} 个替代方案，其中包含国产方案。")
+                        else:
+                            st.info(f"ℹ️ 二次查询返回了 {len(additional_recommendations)} 个替代方案，但未找到国产方案。")
+                        
+                        # 添加到推荐列表
                         for rec in additional_recommendations:
                             if len(recommendations) >= 3:
                                 break
-                            if rec["model"].lower() != part_number.lower():
-                                recommendations.append(rec)
+                            recommendations.append(rec)
                         break
                     else:
-                        st.warning(f"重新调用 DeepSeek API 第 {attempt + 1} 次未返回有效推荐。")
+                        st.warning(f"⚠️ 重新调用 DeepSeek API 第 {attempt + 1} 次未返回有效推荐。")
                         if attempt == max_retries - 1:
-                            st.error("重新调用 DeepSeek API 未能返回有效推荐，将使用默认替代方案。")
-                            for alt in nexar_alternatives:
-                                if len(recommendations) >= 3:
-                                    break
-                                if alt["mpn"].lower() != part_number.lower():
-                                    recommendations.append({
-                                        "model": alt["mpn"],
-                                        "brand": alt.get("name", "未知品牌").split(' ')[0] if alt.get("name") else "未知品牌",
-                                        "category": "未知类别",
-                                        "package": "未知封装",
-                                        "parameters": "参数未知",
-                                        "type": "未知",
-                                        "datasheet": alt["octopartUrl"]
-                                    })
+                            st.error("❌ 重新调用 DeepSeek API 未能返回有效推荐，将使用默认替代方案。")
                 except Exception as e:
-                    st.warning(f"重新调用 DeepSeek API 第 {attempt + 1} 次失败：{e}")
+                    st.warning(f"⚠️ 重新调用 DeepSeek API 第 {attempt + 1} 次失败：{e}")
                     if attempt == max_retries - 1:
-                        st.error("重新调用 DeepSeek API 未能返回有效推荐，将使用默认替代方案。")
-                        for alt in nexar_alternatives:
-                            if len(recommendations) >= 3:
-                                break
-                            if alt["mpn"].lower() != part_number.lower():
-                                recommendations.append({
-                                    "model": alt["mpn"],
-                                    "brand": alt.get("name", "未知品牌").split(' ')[0] if alt.get("name") else "未知品牌",
-                                    "category": "未知类别",
-                                    "package": "未知封装",
-                                    "parameters": "参数未知",
-                                    "type": "未知",
-                                    "datasheet": alt["octopartUrl"]
-                                })
+                        st.error("❌ 重新调用 DeepSeek API 失败，将使用默认替代方案。")
+            
+            # 如果二次查询失败且结果仍然不足，从 Nexar 数据中补充
+            if not second_query_success or len(recommendations) < 3:
+                for alt in nexar_alternatives:
+                    if len(recommendations) >= 3:
+                        break
+                    # 检查是否已经包含此型号
+                    if alt["mpn"].lower() != part_number.lower() and not any(rec["model"].lower() == alt["mpn"].lower() for rec in recommendations):
+                        new_rec = {
+                            "model": alt["mpn"],
+                            "brand": alt.get("name", "未知品牌").split(' ')[0] if alt.get("name") else "未知品牌",
+                            "category": "未知类别",
+                            "package": "未知封装",
+                            "parameters": "参数未知",
+                            "type": "未知",
+                            "datasheet": alt["octopartUrl"]
+                        }
+                        # 识别国产方案
+                        if is_domestic_brand(new_rec["model"]):
+                            new_rec["type"] = "国产"
+                        recommendations.append(new_rec)
+            
+            # 在二次查询完成后再做一次最终统计
+            if need_second_query:
+                domestic_count = sum(1 for rec in recommendations if rec["type"] == "国产")
+                import_count = sum(1 for rec in recommendations if rec["type"] == "进口" or rec["type"] == "未知")
+                st.info(f"🔍 查找完成，共找到 {len(recommendations)} 个替代方案，其中国产方案 {domestic_count} 个，进口/未知方案 {import_count} 个。")
 
         # Step 7: 再次后处理，识别国产方案
         for rec in recommendations:
