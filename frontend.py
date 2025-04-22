@@ -211,13 +211,13 @@ mportant              paddimportantg: 0 !important;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-sizing: border-box !重要; /* 确保边框包含在高度内 */
+            box-sizing: border-box !important; /* 确保边框包含在高度内 */
         }
         
         /* 修复按钮和输入框的列对齐 */
         div[data-testid="column"] {
-            padding重要0 !important;
-            display: f重要x !important;
+            paddingimportant0 !important;
+            display: fimportantx !important;
             align-items: center !important;
         }
         
@@ -226,7 +226,7 @@ mportant              paddimportantg: 0 !important;
             width: 100%;
             display: flex;
             align-items: center;
-            paddin重要 0 !important;
+            paddinimportant 0 !important;
             margin: 0 !important;
         }
         
@@ -401,7 +401,7 @@ mportant              paddimportantg: 0 !important;
         .results-container {
             max-width: 1100px;
             margin: 0 auto 1.5rem auto; /* 减小底部外边距 */
-            margin-top: 0.5重要m !important; /* 减少顶部边距 */
+            margin-top: 0.5importantm !important; /* 减少顶部边距 */
         }
         
         /* 警告框样式 - 减小尺寸 */
@@ -417,14 +417,14 @@ mportant              paddimportantg: 0 !important;
         
         /* 隐藏Streamlit默认的元素 */
         .css-1544g2n.e1tzin5v3 {
-            padding-top重要0 !important;
+            padding-topimportant0 !important;
         }
         
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         
         .stExpander {
-            border: 重要ne !important;
+            border: importantne !important;
             box-shadow: none !important;
         }
         
@@ -451,7 +451,7 @@ mportant              paddimportantg: 0 !important;
         
         /* 标签页样式调整 - 减少空间占用 */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 3重要x !important; /* 增加标签页之间的间距 */
+            gap: 3importantx !important; /* 增加标签页之间的间距 */
             margin-bottom: 10px;
         }
         
@@ -516,13 +516,13 @@ mportant              paddimportantg: 0 !important;
         
         /* 确保列也是等高的 */
         div[data-testid="column"] {
-            height: 450px !重要; /* 与卡片高度保持一致 */
-            padding: 0.3rem !重要;
+            height: 450px !important; /* 与卡片高度保持一致 */
+            padding: 0.3rem !important;
         }
         
         /* 确保行容器也是等高的 */
         div[data-testid="stHorizontalBlock"] {
-            height: 450px !重要; /* 与卡片高度保持一致 */
+            height: 450px !important; /* 与卡片高度保持一致 */
             margin-bottom: 1rem;
         }
         
@@ -576,7 +576,7 @@ mportant              paddimportantg: 0 !important;
         
         /* 调整标签页间距 */
         .stTabs [data-baseweb="tab-list"] {
-            3重要x 3重要x !important;
+            3importantx 3importantx !important;
             margin-bottom: 10px;
         }
         
@@ -591,14 +591,14 @@ mportant              paddimportantg: 0 !important;
         .success-box {
             margin-top: 0.5rem !important;
             margin-bottom: 0.5rem !important;
-            padding: 0.5rem !重要;
+            padding: 0.5rem !important;
         }
         
         /* 确保卡片尺寸更大 */
         .result-card {
             padding: 1.2rem;
             border-radius: 0.8rem;
-            height: 100% !重要;
+            height: 100% !important;
             min-height: 450px; /* 墛大最小高度 */
             max-height: 450px; /* 墛大最大高度 */
             box-shadow: 0 8px 20px rgba(0,0,0,0.07);
@@ -614,18 +614,18 @@ mportant              paddimportantg: 0 !important;
         
         /* 让卡片容器也保持等高 */
         div.css-1r6slb0.e1tzin5v2 {
-            height: 100% !重要;
+            height: 100% !important;
         }
         
         /* 确保列也是等高的 */
         div[data-testid="column"] {
-            height: 450px !重要; /* 与卡片高度保持一致 */
-            padding: 0.3rem !重要;
+            height: 450px !important; /* 与卡片高度保持一致 */
+            padding: 0.3rem !important;
         }
         
         /* 确保行容器也是等高的 */
         div[data-testid="stHorizontalBlock"] {
-            height: 450px !重要; /* 与卡片高度保持一致 */
+            height: 450px !important; /* 与卡片高度保持一致 */
             margin-bottom: 1rem;
         }
         
@@ -633,21 +633,21 @@ mportant              paddimportantg: 0 !important;
         .results-container {
             max-width: 1100px;
             margin: 0 auto 1.5rem auto;
-            margin-top: 0.5rem !重要; /* 减少顶部边距 */
+            margin-top: 0.5rem !important; /* 减少顶部边距 */
         }
         
         /* 减少元素间垂直间距 */
         .element-container, .stAlert > div {
-            margin-top: 0.5rem !重要;
-            margin-bottom: 0.5rem !重要;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
         }
         
         /* 调整成功消息的样式 */
         .st-emotion-cache-1gserj1 {
-            margin-top: 0.3rem !重要;
-            margin-bottom: 0.3rem !重要;
-            padding-top: 0.5rem !重要;
-            padding-bottom: 0.5rem !重要;
+            margin-top: 0.3rem !important;
+            margin-bottom: 0.3rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
         }
         
         /* 修改结果卡片样式 - 改为纵向布局优化 */
@@ -698,23 +698,23 @@ mportant              paddimportantg: 0 !important;
         
         /* 减少成功消息与结果之间的距离 */
         .st-emotion-cache-16idsys p {
-            margin-top: -重要x !重要;
-            padding-top: 重要x !重要;
-            padding-bottom: 5px !重要;
+            margin-top: -importantx !important;
+            padding-top: importantx !important;
+            padding-bottom: 5px !important;
         }
         
         /* 成功框样式 */
         .success-box {
-            margin-top: 0.5rem !重要;
-            margin-bottom: 0.8rem !重要;
-            padding: 0.5rem !重要;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.8rem !important;
+            padding: 0.5rem !important;
         }
         
         /* 调整结果区域样式 */
         .results-container {
             max-width: 900px; /* 稍微减小宽度 */
             margin: 0 auto 1.5rem auto;
-            margin-top: 0.5rem !重要;
+            margin-top: 0.5rem !important;
         }
         
         /* 纵向布局的卡片头部样式 */
@@ -870,8 +870,8 @@ mportant              paddimportantg: 0 !important;
         
         /* 修改AI对话按钮样式，使其与查询按钮区分 */
         .ai-chat-button > button {
-            background: linear-gradient(90deg, #4caf50, #45a0重要) !important;
-            color: wh重要e !important;
+            background: linear-gradient(90deg, #4caf50, #45a0important) !important;
+            color: whimportante !important;
         }
         
         /* 对话弹窗样式 */
@@ -1031,9 +1031,9 @@ mportant              paddimportantg: 0 !important;
             padding: 0.3rem 0.7rem !important;
             margin: 0.25rem 0.15rem !important;
             min-height: unset !important;
-            height: auto !重要;
-            line-height: 1.2 !重要;
-            white-space: normal !重要;
+            height: auto !important;
+            line-height: 1.2 !important;
+            white-space: normal !important;
         }
         
         .preset-question-btn:hover {
@@ -1045,8 +1045,8 @@ mportant              paddimportantg: 0 !important;
         
         /* 预设问题容器 */
         .preset-questions-container {
-            margin-top: 5px !重要;
-            margin-bottom: 15px !重要;
+            margin-top: 5px !important;
+            margin-bottom: 15px !important;
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
@@ -1065,7 +1065,7 @@ mportant              paddimportantg: 0 !important;
         .faq-title {
             font-size: 0.9rem;
             color: #666;
-            margin: 5px 0 !重要;
+            margin: 5px 0 !important;
             font-weight: normal;
         }
         
@@ -1152,62 +1152,62 @@ mportant              paddimportantg: 0 !important;
         
         /* 专门针对常见问题按钮的样式覆盖 */
         div.preset-questions-container div[data-testid="stButton"] > button {
-            background: #ffffff !重要; /* 白色背景 */
-            color: #1a73e8 !重要; 
-            border: 1px solid #cce4ff !重要;
-            font-size: 0.9rem !重要;
-            height: auto !重要;
-            padding: 8px 12px !重要;
+            background: #ffffff !important; /* 白色背景 */
+            color: #1a73e8 !important; 
+            border: 1px solid #cce4ff !important;
+            font-size: 0.9rem !important;
+            height: auto !important;
+            padding: 8px 12px !important;
         }
         
         /* 墛大对话输入框样式 */
         .stChatInput textarea, .stChatInput input {
-            font-size: 1.1rem !重要;
-            padding: 15px !重要;
-            height: 60px !重要;
-            border-radius: 15px !重要;
-            border: 2px solid #b3d1ff !重要;
-            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.1) !重要;
+            font-size: 1.1rem !important;
+            padding: 15px !important;
+            height: 60px !important;
+            border-radius: 15px !important;
+            border: 2px solid #b3d1ff !important;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.1) !important;
         }
         
         /* 让输入框在聊天对话区域更加突出 */
         .stChatInput {
-            margin-top: 15px !重要;
-            margin-bottom: 15px !重要;
-            padding: 5px !重要;
+            margin-top: 15px !important;
+            margin-bottom: 15px !important;
+            padding: 5px !important;
         }
         
         /* 处理输入框的提示文字 */
         .stChatInput textarea::placeholder, .stChatInput input::placeholder {
-            color: #8c9bb5 !重要;
-            font-size: 1.1rem !重要;
+            color: #8c9bb5 !important;
+            font-size: 1.1rem !important;
         }
         
         /* 对话输入框获得焦点时的样式 */
         .stChatInput textarea:focus, .stChatInput input:focus {
-            border-color: #1a73e8 !重要;
-            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.2) !重要;
+            border-color: #1a73e8 !important;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.2) !important;
         }
         
         /* 发送按钮样式优化 */
         .stChatInput button {
-            background-color: #1a73e8 !重要;
-            color: white !重要;
-            border-radius: 50% !重要;
-            width: 40px !重要;
-            height: 40px !重要;
-            display: flex !重要;
-            align-items: center !重要;
-            justify-content: center !重要;
-            margin-right: 5px !重要;
-            margin-top: 10px !重要;
+            background-color: #1a73e8 !important;
+            color: white !important;
+            border-radius: 50% !important;
+            width: 40px !important;
+            height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-right: 5px !important;
+            margin-top: 10px !important;
         }
         
         /* 对话内容区域样式增强 */
         .stChatMessage {
-            padding: 12px !重要;
-            border-radius: 12px !重要;
-            margin-bottom: 10px !重要;
+            padding: 12px !important;
+            border-radius: 12px !important;
+            margin-bottom: 10px !important;
         }
     </style>
     """, unsafe_allow_html=True)
