@@ -26,19 +26,19 @@ def render_ui(get_alternative_parts_func):
     # 更新CSS样式，精简和优化AI对话部分的样式
     st.markdown("""
     <style>
-        /* 整体页面样式 */
+        /* 整体页面样式 - 减少空白 */
         .stApp {
             background-color: #f8f9fa;
         }
         
-        /* 标题样式改进 - 减小尺寸和边距 */
+        /* 标题样式改进 - 进一步减小外边距 */
         .main-header {
-            font-size: 2.5rem; /* 减小字体大小 */
+            font-size: 2.5rem;
             font-weight: 800;
             color: #1a73e8;
             text-align: center;
-            padding: 1rem 0; /* 减小内边距 */
-            margin-bottom: 1rem; /* 减小底部外边距 */
+            padding: 0.5rem 0; /* 减少顶部和底部内边距 */
+            margin-bottom: 0.5rem; /* 减少底部外边距 */
             background: linear-gradient(90deg, #1a73e8, #4285f4, #6c5ce7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -47,34 +47,34 @@ def render_ui(get_alternative_parts_func):
             text-shadow: 0 4px 10px rgba(26, 115, 232, 0.1);
         }
         
-        /* 修改标题装饰 - 完全删除装饰条 */
+        /* 修改标题装饰 - 减少间距 */
         .header-container {
             position: relative;
-            padding: 0 1rem;
-            margin-bottom: 1rem; /* 减小底部外边距 */
+            padding: 0 0.5rem; /* 减小内边距 */
+            margin-bottom: 0.5rem; /* 减小底部外边距 */
         }
         
         /* 使标签面板与页面背景色保持一致，移除边框和阴影 */
         .stTabs [data-baseweb="tab-panel"] {
-            background-color: transparent !important; 
-            border: none !important;
-            box-shadow: none !important;
-            padding-top: 0.5rem !important;
+            background-color: transparent !重要; 
+            border: none !重要;
+            box-shadow: none !重要;
+            padding-top: 0.3rem !重要; /* 减少顶部内边距 */
         }
         
-        /* 修改标签样式，使其更加突出 */
+        /* 修改标签样式，减少空间 */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 30px !important;
-            margin-bottom: 5px !important;
+            gap: 20px !重要; /* 减少标签之间的间距 */
+            margin-bottom: 0 !重要; /* 移除底部外边距 */
         }
         
-        /* 搜索区域样式改进 - 减小内边距 */
+        /* 搜索区域样式改进 - 进一步减小内边距和外边距 */
         .search-area {
             background: linear-gradient(145deg, #ffffff, #f0f7ff);
-            box-shadow: 0 8px 20px rgba(26, 115, 232, 0.15);
-            padding: 1.2rem; /* 减小内边距 */
-            border-radius: 1rem;
-            margin-bottom: 1.5rem; /* 减小底部外边距 */
+            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.15);
+            padding: 0.8rem; /* 减小内边距 */
+            border-radius: 0.8rem;
+            margin-bottom: 1rem; /* 减小底部外边距 */
             border: 1px solid rgba(26, 115, 232, 0.1);
             max-width: 1000px;
             margin-left: auto;
@@ -83,981 +83,77 @@ def render_ui(get_alternative_parts_func):
             align-items: center;
         }
         
-        /* 修复搜索框和按钮容器 - 确保对齐 */
+        /* 修复搜索框和按钮容器 - 减少间距 */
         .search-container {
             display: flex;
-            align-items: center; /* 保持垂直居中 */
-            gap: 20px;
-            margin: 0; /* 确保没有外边距 */
-            padding: 0; /* 确保没有内边距 */
-            width: 100%; /* 确保容器宽度充满 */
-        }
-        
-        /* 输入框和按钮容器共享的基本样式 */
-        .search-input, .search-button {
-            height: 65px;
-            display: flex;
             align-items: center;
-        }
-        
-        /* 搜索框样式 */
-        .search-input {
-            flex: 1;
-        }
-        
-        /* 按钮容器样式 */
-        .search-button {
-            width: 220px;
-            min-width: 220px;
-        }
-        
-        /* streamlit 列的调整 - 确保所有列完全对齐 */
-        div.css-1r6slb0.e1tzin5v2, div.css-keje6w.e1tzin5v2 {  /* 输入框和按钮所在列 */
-            padding: 0 !important; 
-            margin: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-        }
-        
-        /* 强制所有列的子元素拉伸填充 */
-        div.css-1r6slb0.e1tzin5v2 > *, div.css-keje6w.e1tzin5v2 > * {
+            gap: 10px; /* 减少间距 */
+            margin: 0;
+            padding: 0;
             width: 100%;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
-        /* 输入框容器调整 */
-        .stTextInput {
-            margin: 0 !important;
-mportant              paddimportantg: 0 !important;
-        }
-        
-        .stTextInput > div {
-            padding: 0 !important; /* 强制移除容器内边距 */
-            margin: 0 !important; /* 强制移除容器外边距 */
-            height: 65px; /* 明确设置高度 */
-        }
-        
-        .stTextInput > div > div {
-            margin: 0 !important;
-            padding: 0 !important;
-            height: 100%; /* 填充父容器 */
-        }
-        
-        /* 完全自定义输入框样式 */
-        .stTextInput > div > div > input {
-            border-radius: 0.8rem;
-            border: 2px solid #b3d1ff;
-            padding: 0 1.2rem;
-            font-size: 1.5rem;
-            height: 65px; /* 输入框高度 */
-            box-shadow: 0 6px 15px rgba(26, 115, 232, 0.12);
-            color: #333333;
-            background-color: white;
-            width: 100%;
-            box-sizing: border-box !important; /* 确保边框包含在高度内 */
-            margin: 0 !important;
-        }
-        
-        .stTextInput > div > div > input:focus {
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.2);
-        }
-        
-        .stTextInput > div > div > input::placeholder {
-            color: #8c9bb5;
-            opacity: 0.8;
-            font-size: 1.5rem; /* 与输入文字大小保持一致 */
-            line-height: normal;
-        }
-        
-        /* 移除输入框的标签 */
-        .stTextInput > label {
-            display: none !important;
-        }
-        
-        /* 输入框容器调整 */
-        .stTextInput > div {
-            padding: 3px 0; /* 为容器添加内边距 */
-        }
-        
-        /* 按钮容器样式 - 保证与输入框一致 */
-        .search-button {
-            width: 220px;
-            min-width: 220px; 
-            height: 65px; /* 确保与输入框高度一致 */
-            display: flex;
-            align-items: center;
-        }
-        
-        /* 按钮样式 - 确保与输入框完全匹配 */
-        .stButton {
-            height: 65px; /* 与输入框相同的固定高度 */
-            margin-bottomimportant0 !important;
-            margin-top: 0; /* 移除顶部间距 */
-        }
-        
-        .stButton > button {
-            border-radius: 0.8rem;
-            font-weight: 600;
-            font-size: 1.5rem; /* 调整字体大小与输入框一致 */
-            border: none;
-            background: linear-gradient(90deg, #1a73e8, #4285f4);
-            color: white;
-            transition: all 0.3s;
-            height: 65px; /* 固定高度与输入框一致 */
-            width: 100%;
-            padding: 0 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box !important; /* 确保边框包含在高度内 */
-        }
-        
-        /* 修复按钮和输入框的列对齐 */
-        div[data-testid="column"] {
-            paddingimportant0 !important;
-            display: fimportantx !important;
-            align-items: center !important;
-        }
-        
-        /* 确保每个列子元素垂直居中且不溢出 */
-        div[data-testid="column"] > div {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            paddinimportant 0 !important;
-            margin: 0 !important;
-        }
-        
-        /* 新的结果卡片样式 - 调整大小更紧凑 */
-        .result-card {
-            padding: 1.2rem; /* 减小内边距 */
-            border-radius: 0.8rem;
-            height: 100%; /* 保持高度一致 */
-            box-shadow: 0 8px 20px rgba(0,0,0,0.07);
-            transition: all 0.3s ease;
-            position: relative;
-            background: linear-gradient(145deg, #ffffff, #f0f7ff);
-            border-left: 5px solid #1a73e8;
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem; /* 减小间距 */
-        }
-        
-        .result-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(26, 115, 232, 0.15);
-        }
-        
-        .result-card::before {
-            content: "";
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            bottom: -2px;
-            width: 5px;
-            background: linear-gradient(to bottom, #1a73e8, #80d8ff);
-            border-radius: 0 5px 5px 0;
-            opacity: 0.7;
-        }
-        
-        /* 方案编号样式 - 减小尺寸 */
-        .solution-number {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1a73e8;
-            margin-bottom: 0.2rem; /* 减小底部外边距 */
-        }
-        
-        /* 国产/进口标签样式 - 减小尺寸 */
-        .type-badge {
-            display: inline-block;
-            padding: 0.2rem 0.6rem; /* 减小内边距 */
-            border-radius: 1.5rem;
-            font-weight: 500;
-            font-size: 0.85rem; /* 减小字体大小 */
-            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
-            margin-bottom: 0.5rem; /* 减小底部外边距 */
-            background: linear-gradient(90deg, #1a73e8, #4fc3f7);
-            color: white;
-            align-self: flex-start;
-        }
-        
-        /* 元器件型号和品牌标题 - 减小尺寸 */
-        .model-title {
-            font-size: 1.3rem; /* 减小字体大小 */
-            font-weight: 600;
-            margin: 0.3rem 0; /* 减小外边距 */
-            color: #2c3e50;
-            line-height: 1.3;
-        }
-        
-        /* 信息行样式 - 减小尺寸 */
-        .info-row {
-            display: flex;
-            margin-bottom: 0.4rem; /* 减小底部外边距 */
-            line-height: 1.4;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #546e7a;
-            min-width: 3rem; /* 减小宽度 */
-            flex-shrink: 0;
-        }
-        
-        .info-value {
-            color: #37474f;
-            flex: 1;
-        }
-        
-        /* 参数行特殊样式 - 确保文本完整显示 */
-        .parameters {
-            border-top: 1px dashed #e0e0e0;
-            padding-top: 0.5rem; /* 减小顶部内边距 */
-            margin-top: 0.2rem; /* 减小顶部外边距 */
-            flex-direction: column;
-            flex-grow: 1; /* 让参数部分可以灵活扩展 */
-        }
-        
-        .parameters .info-label {
-            margin-bottom: 0.3rem; /* 减小底部外边距 */
-        }
-        
-        .parameters .info-value {
-            background-color: #f5f7fa;
-            padding: 0.5rem; /* 减小内边距 */
-            border-radius: 0.4rem;
-            border-left: 3px solid #1a73e8;
-            font-size: 0.9rem; /* 减小字体大小 */
-            white-space: normal;
-            word-break: break-word;
-            overflow-wrap: break-word;
-            height: auto;
-            max-height: none; /* 不限制高度 */
-            overflow-y: visible; /* 保证内容可见 */
-        }
-        
-        /* 数据手册链接样式 - 减小尺寸 */
-        .card-footer {
-            margin-top: 0.5rem; /* 减小顶部外边距 */
-            padding-top: 0.5rem; /* 减小顶部内边距 */
-        }
-        
-        .datasheet-link {
-            display: inline-block;
-            color: #1a73e8;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.4rem 0.8rem; /* 减小内边距 */
-            background: rgba(26, 115, 232, 0.1);
-            border-radius: 0.4rem;
-            transition: all 0.2s;
-            font-size: 0.9rem; /* 减小字体大小 */
-        }
-        
-        .datasheet-link:hover {
-            background: rgba(26, 115, 232, 0.2);
-            text-decoration: none;
-        }
-        
-        /* 历史记录样式 - 减小尺寸 */
-        .history-area {
-            background: linear-gradient(145deg, #ffffff, #f0f7ff);
-            padding: 1rem; /* 减小内边距 */
-            border-radius: 0.8rem;
-            margin-top: 1rem; /* 减小顶部外边距 */
-            box-shadow: 0 4px 8px rgba(26, 115, 232, 0.07);
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .history-item {
-            padding: 0.5rem 0.8rem; /* 减小内边距 */
-            margin: 0.3rem 0; /* 减小外边距 */
-            background: linear-gradient(145deg, #ffffff, #f5f5f5);
-            border-radius: 0.4rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-left: 3px solid #1a73e8;
-        }
-        
-        .history-item:hover {
-            background: linear-gradient(145deg, #f5f5f5, #e6f3ff);
-            transform: translateX(5px);
-        }
-        
-        /* 页脚样式 - 减小尺寸 */
-        .footer-text {
-            color: #9e9e9e;
-            font-size: 0.8rem; /* 减小字体大小 */
-            text-align: center;
-            padding: 0.8rem 0; /* 减小内边距 */
-        }
-        
-        /* 调整结果区域样式 */
-        .results-container {
-            max-width: 1100px;
-            margin: 0 auto 1.5rem auto; /* 减小底部外边距 */
-            margin-top: 0.5importantm !important; /* 减少顶部边距 */
-        }
-        
-        /* 警告框样式 - 减小尺寸 */
-        .no-result-box {
-            background-color: #fff3cd;
-            padding: 1.5rem; /* 减小内边距 */
-            border-radius: 0.8rem;
-            text-align: center;
-            margin: 0.8rem auto; /* 减小外边距 */
-            max-width: 800px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-        
-        /* 隐藏Streamlit默认的元素 */
-        .css-1544g2n.e1tzin5v3 {
-            padding-topimportant0 !important;
-        }
-        
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        
-        .stExpander {
-            border: importantne !important;
-            box-shadow: none !important;
-        }
-        
-        /* 修复streamlit列对齐问题 */
-        div[data-testid="column"] {
-            padding: 0 !important;
-            margin: 0 !important;
-            display: flex !important;
-            align-items: stretch !important; /* 确保列拉伸以匹配高度 */
-            height: 100% !important;
-        }
-        
-        div[data-testid="column"] > div {
-            width: 100%;
-            padding: 0.3rem !important; /* 添加小间距 */
-            box-sizing: border-box;
-        }
-        
-        /* 确保所有卡片等高 */
-        div[data-testid="stHorizontalBlock"] {
-            align-items: stretch !important; /* 确保块内元素拉伸 */
-            display: flex !important;
-        }
-        
-        /* 标签页样式调整 - 减少空间占用 */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 3importantx !important; /* 增加标签页之间的间距 */
-            margin-bottom: 10px;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            font-weight: 600; /* 增加字体粗细 */
-        }
-        
-        .stTabs [data-baseweb="tab-panel"] {
-            padding-top: 1rem;
-        }
-        
-        /* 减少tab内部元素的间距 */
-        .stTabs [data-baseweb="tab-panel"] > div > div {
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
         }
         
         /* 减少整体页面的内边距 */
         .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
+            padding-top: 0.5rem !重要; /* 减少顶部内边距 */
+            padding-bottom: 0.5rem !重要; /* 减少底部内边距 */
             max-width: 1200px;
-            padding-left: 1.5rem !important;
-            padding-right: 1.5rem !important;
-        }
-        
-        /* 减少standard垂直间距 */
-        .css-1kyxreq {
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-        
-        /* 为Streamlit的elements减少垂直间距 */
-        .stButton, .stTextInput, .stSelectbox, .stFileUploader {
-            margin-bottom: 0.5rem;
-        }
-        
-        /* 确保卡片等高和宽度一致 */
-        .result-card {
-            padding: 1.2rem;
-            border-radius: 0.8rem;
-            height: 100% !important; /* 强制相同高度 */
-            min-height: 450px; /* 墛大最小高度 */
-            max-height: 450px; /* 墛大最大高度 */
-            box-shadow: 0 8px 20px rgba(0,0,0,0.07);
-            transition: all 0.3s ease;
-            position: relative;
-            background: linear-gradient(145deg, #ffffff, #f0f7ff);
-            border-left: 5px solid #1a73e8;
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            overflow: auto; /* 允许内容超出时滚动 */
-        }
-        
-        /* 让卡片容器也保持等高 */
-        div.css-1r6slb0.e1tzin5v2 {
-            height: 100% !important;
-        }
-        
-        /* 确保列也是等高的 */
-        div[data-testid="column"] {
-            height: 450px !important; /* 与卡片高度保持一致 */
-            padding: 0.3rem !important;
-        }
-        
-        /* 确保行容器也是等高的 */
-        div[data-testid="stHorizontalBlock"] {
-            height: 450px !important; /* 与卡片高度保持一致 */
-            margin-bottom: 1rem;
-        }
-        
-        /* 参数行特殊样式 - 确保内容在固定高度内可滚动 */
-        .parameters {
-            border-top: 1px dashed #e0e0e0;
-            padding-top: 0.5rem;
-            margin-top: 0.2rem;
-            flex-direction: column;
-            flex-grow: 1;
-            max-height: 150px; /* 限制参数部分的最大高度 */
-            overflow-y: auto; /* 内容多时可滚动 */
-        }
-        
-        .parameters .info-value {
-            background-color: #f5f7fa;
-            padding: 0.5rem;
-            border-radius: 0.4rem;
-            border-left: 3px solid #1a73e8;
-            font-size: 0.9rem;
-            white-space: normal;
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }
-        
-        /* 自定义滚动条样式 */
-        .parameters::-webkit-scrollbar {
-            width: 4px;
-        }
-        
-        .parameters::-webkit-scrollbar-thumb {
-            background-color: rgba(26, 115, 232, 0.3);
-            border-radius: 4px;
-        }
-        
-        .parameters::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-        }
-        
-        /* 确保卡片内部内容不会撑开卡片 */
-        .model-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin: 0.3rem 0;
-            color: #2c3e50;
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        /* 调整标签页间距 */
-        .stTabs [data-baseweb="tab-list"] {
-            3importantx 3importantx !important;
-            margin-bottom: 10px;
-        }
-        
-        /* 减小成功消息与搜索框之间的距离 */
-        .st-emotion-cache-16idsys p {
-            margin-top: -5px !important;  /* 减小顶部边距 */
-            padding-top: 5px !important;
-            padding-bottom: 5px !important;
-        }
-        
-        /* 成功框样式 */
-        .success-box {
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
-            padding: 0.5rem !important;
-        }
-        
-        /* 确保卡片尺寸更大 */
-        .result-card {
-            padding: 1.2rem;
-            border-radius: 0.8rem;
-            height: 100% !important;
-            min-height: 450px; /* 墛大最小高度 */
-            max-height: 450px; /* 墛大最大高度 */
-            box-shadow: 0 8px 20px rgba(0,0,0,0.07);
-            transition: all 0.3s ease;
-            position: relative;
-            background: linear-gradient(145deg, #ffffff, #f0f7ff);
-            border-left: 5px solid #1a73e8;
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            overflow: auto;
-        }
-        
-        /* 让卡片容器也保持等高 */
-        div.css-1r6slb0.e1tzin5v2 {
-            height: 100% !important;
-        }
-        
-        /* 确保列也是等高的 */
-        div[data-testid="column"] {
-            height: 450px !important; /* 与卡片高度保持一致 */
-            padding: 0.3rem !important;
-        }
-        
-        /* 确保行容器也是等高的 */
-        div[data-testid="stHorizontalBlock"] {
-            height: 450px !important; /* 与卡片高度保持一致 */
-            margin-bottom: 1rem;
-        }
-        
-        /* 调整结果区域与成功消息之间的距离 */
-        .results-container {
-            max-width: 1100px;
-            margin: 0 auto 1.5rem auto;
-            margin-top: 0.5rem !important; /* 减少顶部边距 */
+            padding-left: 1rem !重要; /* 减少左侧内边距 */
+            padding-right: 1rem !重要; /* 减少右侧内边距 */
         }
         
         /* 减少元素间垂直间距 */
         .element-container, .stAlert > div {
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
+            margin-top: 0.3rem !重要; /* 减少顶部外边距 */
+            margin-bottom: 0.3rem !重要; /* 减少底部外边距 */
         }
         
-        /* 调整成功消息的样式 */
-        .st-emotion-cache-1gserj1 {
-            margin-top: 0.3rem !important;
-            margin-bottom: 0.3rem !important;
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-        }
-        
-        /* 修改结果卡片样式 - 改为纵向布局优化 */
-        .result-card {
-            padding: 1.5rem;
-            border-radius: 1rem;
-            width: 100%;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.07);
-            transition: all 0.3s ease;
-            position: relative;
-            background: linear-gradient(145deg, #ffffff, #f0f7ff);
-            border-left: 5px solid #1a73e8;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1rem; /* 为纵向布局添加下边距 */
-            overflow: visible; /* 确保内容不被截断 */
-        }
-        
-        /* 型号标题样式优化 - 让型号可以完整显示 */
-        .model-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin: 0.4rem 0;
-            color: #2c3e50;
-            line-height: 1.3;
-            white-space: normal; /* 允许换行 */
-            overflow: visible; /* 允许内容溢出 */
-            text-overflow: clip; /* 不使用省略号 */
-        }
-        
-        /* 调整参数部分，确保完整显示 */
-        .parameters {
-            border-top: 1px dashed #e0e0e0;
-            padding-top: 0.8rem;
-            margin-top: 0.3rem;
-            flex-direction: column;
-            flex-grow: 1;
-            max-height: none; /* 移除高度限制 */
-            overflow-y: visible; /* 不需要滚动 */
-        }
-        
-        /* 每个结果区块 */
-        .solution-block {
-            margin-bottom: 1.5rem;
-            width: 100%;
-        }
-        
-        /* 减少成功消息与结果之间的距离 */
-        .st-emotion-cache-16idsys p {
-            margin-top: -importantx !important;
-            padding-top: importantx !important;
-            padding-bottom: 5px !important;
-        }
-        
-        /* 成功框样式 */
-        .success-box {
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.8rem !important;
-            padding: 0.5rem !important;
-        }
-        
-        /* 调整结果区域样式 */
-        .results-container {
-            max-width: 900px; /* 稍微减小宽度 */
-            margin: 0 auto 1.5rem auto;
-            margin-top: 0.5rem !important;
-        }
-        
-        /* 纵向布局的卡片头部样式 */
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.8rem;
-        }
-        
-        /* 显式设置型号容器宽度 */
-        .model-container {
-            width: 100%;
-            padding-right: 1rem;
-        }
-        
-        /* AI聊天相关样式 */
+        /* 聊天容器样式 - 减少空白区域 */
         .chat-container {
             max-width: 800px;
             margin: 0 auto;
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 1rem;
+            padding: 0.8rem; /* 减少内边距 */
+            margin-top: 0.5rem; /* 减少顶部外边距 */
+            margin-bottom: 0.5rem; /* 减少底部外边距 */
         }
         
-        /* 聊天消息样式 */
-        .chat-message {
-            padding: 0.5rem 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 0.8rem;
-        }
-        
-        .user-message {
-            background-color: #e6f2ff;
-            border-left: 3px solid #1a73e8;
-            margin-left: 1rem;
-            margin-right: 2rem;
-        }
-        
-        .assistant-message {
-            background-color: #f5f5f5;
-            border-right: 3px solid #4caf50;
-            margin-left: 2rem;
-            margin-right: 1rem;
-        }
-        
-        /* 对话按钮样式 */
-        .chat-button {
-            font-size: 1rem;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(90deg, #4caf50, #45a049);
-            color: white;
-            border-radius: 0.5rem;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-        }
-        
-        .chat-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
-        }
-        
-        .chat-button svg {
-            fill: currentColor;
-            width: 1.2em;
-            height: 1.2em;
-        }
-        
-        /* 对话框标题 */
-        .chat-title {
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        /* 对话区域样式 */
-        .chat-area {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 1000;
-            padding: 1.5rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* 聊天背景遮罩 */
-        .chat-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        
-        /* 聊天关闭按钮 */
-        .chat-close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #777;
-            transition: all 0.2s;
-        }
-        
-        .chat-close-btn:hover {
-            color: #f44336;
-            transform: scale(1.1);
-        }
-        
-        /* 聊天内容区域 */
-        .chat-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 1rem;
-            padding-right: 0.5rem;
-        }
-        
-        /* 聊天输入区域 */
-        .chat-input-area {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        /* 修正在移动设备上的显示 */
-        @media (max-width: 768px) {
-            .chat-area {
-                width: 95%;
-                max-height: 90vh;
-            }
-        }
-        
-        /* 修改AI对话按钮样式，使其与查询按钮区分 */
-        .ai-chat-button > button {
-            background: linear-gradient(90deg, #4caf50, #45a0important) !important;
-            color: whimportante !important;
-        }
-        
-        /* 对话弹窗样式 */
-        .chat-dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 800px;
-            height: 80vh;
-            max-height: 600px;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 9999;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* 对话框背景遮罩 */
-        .dialog-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 9998;
-            width: 80%;
-            max-width: 800px;
-            height: 80vh;
-            max-height: 600px;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 9999;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* 对话框背景遮罩 */
-        .dialog-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 9998;
-        }
-        
-        /* 对话框标题栏 */
+        /* 对话框标题区域 - 减少间距 */
         .chat-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 5px; /* 减少底部内边距 */
             border-bottom: 1px solid #eee;
         }
         
-        /* 对话框标题 */
+        /* 对话框标题 - 减少间距 */
         .chat-title {
-            font-size: 1.5rem;
+            margin-bottom: 0.5rem; /* 减少底部外边距 */
+            text-align: center;
+            font-size: 1.3rem; /* 减小字体大小 */
             font-weight: 600;
-            margin: 0;
             color: #2c3e50;
         }
         
-        /* 对话内容区 */
-        .chat-body {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        /* 对话框底部 */
-        .chat-footer {
-            display: flex;
-            justify-content: flex-end;
-        }
-        
-        /* 关闭按钮样式 */
-        .close-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            line-height: 1;
-            cursor: pointer;
-            color: #666;
-        }
-        
-        .close-button:hover {
-            color: #ff0000;
-        }
-        
-        /* 新增样式：预设问题按钮样式 */
-        .preset-question {
-            display: inline-block;
-            margin: 5px 0;
-            padding: 8px 12px;
-            background-color: #e6f2ff;
-            border: 1px solid #b3d1ff;
-            border-radius: 20px;
-            color: #1a73e8;
-            font-size: 0.9rem;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .preset-question:hover {
-            background-color: #d4e6ff;
-            box-shadow: 0 2px 5px rgba(26, 115, 232, 0.1);
-            transform: translateY(-1px);
-        }
-        
-        /* 欢迎信息样式 */
-        .welcome-message {
-            background-color: #f5f5f5;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #4caf50;
-        }
-        
-        /* 注释文本样式 */
-        .note-text {
-            font-size: 0.8rem;
-            color: #777;
-            font-style: italic;
-            margin-top: 5px;
-        }
-        
-        /* 预设问题容器 */
+        /* 预设问题容器 - 减少间距 */
         .preset-questions-container {
-            margin-top: 10px;
-            margin-bottom: 15px;
-        }
-        
-        /* 修改预设问题按钮样式 - 更小更浅 */
-        .preset-question-btn {
-            background-color: #f0f7ff !important;
-            color: #1a73e8 !important; 
-            border: 1px solid #cce4ff !important;
-            border-radius: 20px !important;
-            font-size: 0.85rem !important;
-            padding: 0.3rem 0.7rem !important;
-            margin: 0.25rem 0.15rem !important;
-            min-height: unset !important;
-            height: auto !important;
-            line-height: 1.2 !important;
-            white-space: normal !important;
-        }
-        
-        .preset-question-btn:hover {
-            background-color: #e6f0ff !important;
-            border-color: #b3d1ff !important;
-            transform: translateY(-1px);
-            box-shadow: 0 1px 3px rgba(26, 115, 232, 0.1) !important;
-        }
-        
-        /* 预设问题容器 */
-        .preset-questions-container {
-            margin-top: 5px !important;
-            margin-bottom: 15px !important;
+            margin-top: 0.3rem !重要; /* 减少顶部外边距 */
+            margin-bottom: 0.5rem !重要; /* 减少底部外边距 */
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 3px; /* 减少按钮之间的间距 */
         }
         
-        /* 欢迎信息样式 */
+        /* 欢迎信息样式 - 减少间距 */
         .welcome-message {
             background-color: #f5f5f5;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
+            border-radius: 8px; /* 减小圆角 */
+            padding: 10px; /* 减少内边距 */
+            margin-bottom: 8px; /* 减少底部外边距 */
             border-left: 4px solid #4caf50;
         }
         
@@ -1065,149 +161,56 @@ mportant              paddimportantg: 0 !important;
         .faq-title {
             font-size: 0.9rem;
             color: #666;
-            margin: 5px 0 !important;
+            margin: 3px 0 !重要; /* 减少外边距 */
             font-weight: normal;
         }
         
-        /* 数据手册链接样式 - 改进 */
-        .card-footer {
-            margin-top: auto;  /* 自动占用剩余空间，将按钮推到底部 */
-            padding-top: 1rem; /* 增加顶部内边距 */
-            display: flex;     /* 使用弹性布局 */
-            flex-wrap: wrap;   /* 允许按钮换行 */
-            gap: 0.5rem;       /* 按钮间隔 */
-            justify-content: space-between; /* 分散对齐，确保充分利用空间 */
+        /* 对话内容区域样式 */
+        .stChatMessage {
+            padding: 8px !重要; /* 减少内边距 */
+            border-radius: 8px !重要; /* 减小圆角 */
+            margin-bottom: 6px !重要; /* 减少底部外边距 */
         }
         
-        .datasheet-link {
-            display: inline-block;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.4rem;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-            text-align: center;  /* 居中文字 */
-            flex: 1;             /* 允许链接拉伸填充空间 */
-            white-space: nowrap; /* 防止文字换行 */
-        }
-        
-        /* 主数据手册链接样式 */
-        .primary-link {
-            background-color: rgba(26, 115, 232, 0.1);
-            color: #1a73e8;
-            border: 1px solid rgba(26, 115, 232, 0.2);
-        }
-        
-        .primary-link:hover {
-            background-color: rgba(26, 115, 232, 0.2);
-            box-shadow: 0 2px 5px rgba(26, 115, 232, 0.2);
-            transform: translateY(-1px);
-        }
-        
-        /* 搜索链接样式 */
-        .search-link {
-            background-color: rgba(76, 175, 80, 0.1);
-            color: #4caf50;
-            border: 1px solid rgba(76, 175, 80, 0.2);
-        }
-        
-        .search-link:hover {
-            background-color: rgba(76, 175, 80, 0.2);
-            box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
-            transform: translateY(-1px);
-        }
-        
-        /* 卡片中内容弹性布局，确保页脚始终在底部 */
-        .result-card {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        /* 确保参数区域可以伸缩，但有最小和最大高度限制 */
-        .parameters {
-            flex-grow: 1;
-            min-height: 100px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        /* 常见问题按钮样式 - 修改为白色背景 */
-        div[data-testid="stButton"] > button {
-            border-radius: 0.8rem;
-            font-weight: 600;
-            font-size: 1.5rem;
-            border: none;
-            background: linear-gradient(90deg, #1a73e8, #4285f4);
-            color: white;
-            transition: all 0.3s;
-            height: 65px;
-            width: 100%;
-            padding: 0 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* 专门针对常见问题按钮的样式覆盖 */
-        div.preset-questions-container div[data-testid="stButton"] > button {
-            background: #ffffff !important; /* 白色背景 */
-            color: #1a73e8 !important; 
-            border: 1px solid #cce4ff !important;
-            font-size: 0.9rem !important;
-            height: auto !important;
-            padding: 8px 12px !important;
-        }
-        
-        /* 墛大对话输入框样式 */
-        .stChatInput textarea, .stChatInput input {
-            font-size: 1.1rem !important;
-            padding: 15px !important;
-            height: 60px !important;
-            border-radius: 15px !important;
-            border: 2px solid #b3d1ff !important;
-            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.1) !important;
-        }
-        
-        /* 让输入框在聊天对话区域更加突出 */
+        /* 让输入框在聊天对话区域更加紧凑 */
         .stChatInput {
-            margin-top: 15px !important;
-            margin-bottom: 15px !important;
-            padding: 5px !important;
+            margin-top: 8px !重要; /* 减少顶部外边距 */
+            margin-bottom: 8px !重要; /* 减少底部外边距 */
+            padding: 3px !重要; /* 减少内边距 */
+        }
+        
+        /* 隐藏Streamlit默认元素的外边距 */
+        div.css-1kyxreq {
+            margin-top: 0.3rem !重要;
+            margin-bottom: 0.3rem !重要;
+        }
+        
+        /* 减少各种Streamlit元素的垂直间距 */
+        .stButton, .stTextInput, .stSelectbox, .stFileUploader {
+            margin-bottom: 0.3rem;
+        }
+        
+        /* 修复列对齐问题，减少列间距 */
+        div[data-testid="column"] {
+            padding: 0 !重要;
+            margin: 0 !重要;
+        }
+        
+        /* 减少tab内部元素的间距 */
+        .stTabs [data-baseweb="tab-panel"] > div > div {
+            margin-top: 0.3rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        /* 减少单个元器件查询和BOM批量查询tab之间的垂直间距 */
+        .stTabs {
+            margin-bottom: 0.5rem !重要;
         }
         
         /* 处理输入框的提示文字 */
         .stChatInput textarea::placeholder, .stChatInput input::placeholder {
-            color: #8c9bb5 !important;
-            font-size: 1.1rem !important;
-        }
-        
-        /* 对话输入框获得焦点时的样式 */
-        .stChatInput textarea:focus, .stChatInput input:focus {
-            border-color: #1a73e8 !important;
-            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.2) !important;
-        }
-        
-        /* 发送按钮样式优化 */
-        .stChatInput button {
-            background-color: #1a73e8 !important;
-            color: white !important;
-            border-radius: 50% !important;
-            width: 40px !important;
-            height: 40px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin-right: 5px !important;
-            margin-top: 10px !important;
-        }
-        
-        /* 对话内容区域样式增强 */
-        .stChatMessage {
-            padding: 12px !important;
-            border-radius: 12px !important;
-            margin-bottom: 10px !important;
+            color: #8c9bb5 !重要;
+            font-size: 1rem !重要; /* 减小字体大小 */
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1423,38 +426,97 @@ mportant              paddimportantg: 0 !important;
                             st.markdown("---")
                     
                     # 提供下载结果的选项
-                    st.subheader("下载查询结果")
+                    st.subheader("📊 下载查询结果")
                     
                     # 将结果转换为可下载的Excel格式
                     result_data = []
+                    
+                    # 遍历所有批量查询结果
                     for mpn, result_info in batch_results.items():
                         alts = result_info.get('alternatives', [])
                         name = result_info.get('name', '')
-                        for i, alt in enumerate(alts[:3], 1):
+                        description = result_info.get('description', '')
+                        
+                        # 如果没有替代方案，添加一个"未找到替代方案"的记录
+                        if not alts:
                             result_data.append({
                                 "原元器件名称": name,
                                 "原型号": mpn,
-                                "替代方案序号": i,
-                                "替代型号": alt.get("model", ""),
-                                "类型": alt.get("type", "未知"),
-                                "参数": alt.get("parameters", ""),
-                                "数据手册链接": alt.get("datasheet", "")
+                                "原器件描述": description,
+                                "替代方案序号": "-",
+                                "替代型号": "未找到替代方案",
+                                "替代品牌": "-",
+                                "类别": "-",
+                                "封装": "-",
+                                "类型": "-",
+                                "参数": "-",
+                                "数据手册链接": "-"
                             })
+                        else:
+                            # 添加找到的替代方案
+                            for i, alt in enumerate(alts, 1):
+                                result_data.append({
+                                    "原元器件名称": name,
+                                    "原型号": mpn,
+                                    "原器件描述": description,
+                                    "替代方案序号": i,
+                                    "替代型号": alt.get("model", ""),
+                                    "替代品牌": alt.get("brand", "未知品牌"),
+                                    "类别": alt.get("category", "未知类别"),
+                                    "封装": alt.get("package", "未知封装"),
+                                    "类型": alt.get("type", "未知"),
+                                    "参数": alt.get("parameters", ""),
+                                    "数据手册链接": alt.get("datasheet", "")
+                                })
                     
+                    # 当有结果数据时，生成并提供下载
                     if result_data:
+                        # 创建DataFrame
                         df_results = pd.DataFrame(result_data)
-                        # 将DataFrame转换为Excel
-                        output = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
-                        with pd.ExcelWriter(output.name) as writer:
-                            df_results.to_excel(writer, sheet_name='替代方案', index=False)
                         
-                        with open(output.name, 'rb') as f:
+                        # 添加两种下载格式选项
+                        col1, col2 = st.columns(2)
+                        
+                        # 创建Excel文件
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as excel_file:
+                            with pd.ExcelWriter(excel_file.name, engine='openpyxl') as writer:
+                                df_results.to_excel(writer, sheet_name='替代方案查询结果', index=False)
+                            
+                            # 读取生成的Excel文件
+                            with open(excel_file.name, 'rb') as f:
+                                excel_data = f.read()
+                        
+                        # 创建CSV文件
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as csv_file:
+                            df_results.to_csv(csv_file.name, index=False, encoding='utf-8-sig')  # 使用带BOM的UTF-8编码，Excel可以正确识别中文
+                            
+                            # 读取生成的CSV文件
+                            with open(csv_file.name, 'rb') as f:
+                                csv_data = f.read()
+                        
+                        # 显示两个下载按钮
+                        with col1:
                             st.download_button(
-                                label="下载替代方案表格 (Excel)",
-                                data=f.read(),
-                                file_name=f"替代方案查询结果_{timestamp.replace(':', '-')}.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                label="📥 下载为Excel文件 (.xlsx)",
+                                data=excel_data,
+                                file_name=f"元器件替代方案查询结果_{timestamp.replace(':', '-')}.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                use_container_width=True
                             )
+                        
+                        with col2:
+                            st.download_button(
+                                label="📥 下载为CSV文件 (.csv)",
+                                data=csv_data,
+                                file_name=f"元器件替代方案查询结果_{timestamp.replace(':', '-')}.csv",
+                                mime="text/csv",
+                                use_container_width=True
+                            )
+                        
+                        # 添加下载说明
+                        st.info("💡 提示：Excel格式适合大多数办公软件查看，CSV格式兼容性更广但可能需要额外设置字符编码")
+                    else:
+                        st.warning("⚠️ 没有查询到任何替代方案，无法生成下载文件")
         else:
             # 移除空白状态下的AI对话按钮
             st.info("请上传BOM文件（Excel或CSV格式）进行批量查询")
