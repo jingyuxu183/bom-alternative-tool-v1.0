@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 import time
 import pandas as pd
-import tempfile  # 添加tempfile导入，用于创建临时文件
+import tempfile  # 用于创建临时文件，支持文件下载功能
 
 def render_ui(get_alternative_parts_func):
     # Streamlit 界面 - 确保 set_page_config 是第一个Streamlit命令
@@ -26,19 +26,19 @@ def render_ui(get_alternative_parts_func):
     # 更新CSS样式，精简和优化AI对话部分的样式
     st.markdown("""
     <style>
-        /* 整体页面样式 - 减少空白 */
+        /* 整体页面样式 */
         .stApp {
             background-color: #f8f9fa;
         }
         
-        /* 标题样式改进 - 进一步减小外边距 */
+        /* 标题样式 */
         .main-header {
             font-size: 2.5rem;
             font-weight: 800;
             color: #1a73e8;
             text-align: center;
-            padding: 0.5rem 0; /* 减少顶部和底部内边距 */
-            margin-bottom: 0.5rem; /* 减少底部外边距 */
+            padding: 0.5rem 0; /* 顶部和底部内边距 */
+            margin-bottom: 0.5rem; /* 底部外边距 */
             background: linear-gradient(90deg, #1a73e8, #4285f4, #6c5ce7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -47,34 +47,34 @@ def render_ui(get_alternative_parts_func):
             text-shadow: 0 4px 10px rgba(26, 115, 232, 0.1);
         }
         
-        /* 修改标题装饰 - 减少间距 */
+        /* 标题装饰 */
         .header-container {
             position: relative;
-            padding: 0 0.5rem; /* 减小内边距 */
-            margin-bottom: 0.5rem; /* 减小底部外边距 */
+            padding: 0 0.5rem; /* 内边距 */
+            margin-bottom: 0.5rem; /* 底部外边距 */
         }
         
         /* 使标签面板与页面背景色保持一致，移除边框和阴影 */
         .stTabs [data-baseweb="tab-panel"] {
-            background-color: transparent !重要; 
-            border: none !重要;
-            box-shadow: none !重要;
-            padding-top: 0.3rem !重要; /* 减少顶部内边距 */
+            background-color: transparent !important; 
+            border: none !important;
+            box-shadow: none !important;
+            padding-top: 0.3rem !important; /* 顶部内边距 */
         }
         
         /* 修改标签样式，减少空间 */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 20px !重要; /* 减少标签之间的间距 */
-            margin-bottom: 0 !重要; /* 移除底部外边距 */
+            gap: 20px !important; /* 标签之间的间距 */
+            margin-bottom: 0 !important; /* 底部外边距 */
         }
         
-        /* 搜索区域样式改进 - 进一步减小内边距和外边距 */
+        /* 搜索区域样式 */
         .search-area {
             background: linear-gradient(145deg, #ffffff, #f0f7ff);
             box-shadow: 0 5px 15px rgba(26, 115, 232, 0.15);
-            padding: 0.8rem; /* 减小内边距 */
+            padding: 0.8rem; /* 内边距 */
             border-radius: 0.8rem;
-            margin-bottom: 1rem; /* 减小底部外边距 */
+            margin-bottom: 1rem; /* 底部外边距 */
             border: 1px solid rgba(26, 115, 232, 0.1);
             max-width: 1000px;
             margin-left: auto;
@@ -83,77 +83,77 @@ def render_ui(get_alternative_parts_func):
             align-items: center;
         }
         
-        /* 修复搜索框和按钮容器 - 减少间距 */
+        /* 搜索框和按钮容器  */
         .search-container {
             display: flex;
             align-items: center;
-            gap: 10px; /* 减少间距 */
+            gap: 10px; 
             margin: 0;
             padding: 0;
             width: 100%;
         }
         
-        /* 减少整体页面的内边距 */
+        /* 整体页面的内边距 */
         .block-container {
-            padding-top: 0.5rem !重要; /* 减少顶部内边距 */
-            padding-bottom: 0.5rem !重要; /* 减少底部内边距 */
+            padding-top: 0.5rem !important; /* 顶部内边距 */
+            padding-bottom: 0.5rem !important; /* 底部内边距 */
             max-width: 1200px;
-            padding-left: 1rem !重要; /* 减少左侧内边距 */
-            padding-right: 1rem !重要; /* 减少右侧内边距 */
+            padding-left: 1rem !important; /* 左侧内边距 */
+            padding-right: 1rem !important; /* 右侧内边距 */
         }
         
-        /* 减少元素间垂直间距 */
+        /* 元素间垂直间距 */
         .element-container, .stAlert > div {
-            margin-top: 0.3rem !重要; /* 减少顶部外边距 */
-            margin-bottom: 0.3rem !重要; /* 减少底部外边距 */
+            margin-top: 0.3rem !important; /* 顶部外边距 */
+            margin-bottom: 0.3rem !important; /* 底部外边距 */
         }
         
-        /* 聊天容器样式 - 减少空白区域 */
+        /* 聊天容器样式 */
         .chat-container {
             max-width: 800px;
             margin: 0 auto;
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 0.8rem; /* 减少内边距 */
-            margin-top: 0.5rem; /* 减少顶部外边距 */
-            margin-bottom: 0.5rem; /* 减少底部外边距 */
+            padding: 0.8rem; /* 内边距 */
+            margin-top: 0.5rem; /* 顶部外边距 */
+            margin-bottom: 0.5rem; /* 底部外边距 */
         }
         
-        /* 对话框标题区域 - 减少间距 */
+        /* 对话框标题区域*/
         .chat-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
-            padding-bottom: 5px; /* 减少底部内边距 */
+            padding-bottom: 5px; /* 底部内边距 */
             border-bottom: 1px solid #eee;
         }
         
-        /* 对话框标题 - 减少间距 */
+        /* 对话框标题 */
         .chat-title {
-            margin-bottom: 0.5rem; /* 减少底部外边距 */
+            margin-bottom: 0.5rem; /* 底部外边距 */
             text-align: center;
-            font-size: 1.3rem; /* 减小字体大小 */
+            font-size: 1.3rem; /* 字体大小 */
             font-weight: 600;
             color: #2c3e50;
         }
         
-        /* 预设问题容器 - 减少间距 */
+        /* 预设问题容器  */
         .preset-questions-container {
-            margin-top: 0.3rem !重要; /* 减少顶部外边距 */
-            margin-bottom: 0.5rem !重要; /* 减少底部外边距 */
+            margin-top: 0.3rem !important; /* 顶部外边距 */
+            margin-bottom: 0.5rem !important; /* 底部外边距 */
             display: flex;
             flex-wrap: wrap;
-            gap: 3px; /* 减少按钮之间的间距 */
+            gap: 3px; /* 按钮之间的间距 */
         }
         
-        /* 欢迎信息样式 - 减少间距 */
+        /* 欢迎信息样式*/
         .welcome-message {
             background-color: #f5f5f5;
-            border-radius: 8px; /* 减小圆角 */
-            padding: 10px; /* 减少内边距 */
-            margin-bottom: 8px; /* 减少底部外边距 */
+            border-radius: 8px; /* 圆角 */
+            padding: 10px; /* 内边距 */
+            margin-bottom: 8px; /* 底部外边距 */
             border-left: 4px solid #4caf50;
         }
         
@@ -161,39 +161,39 @@ def render_ui(get_alternative_parts_func):
         .faq-title {
             font-size: 0.9rem;
             color: #666;
-            margin: 3px 0 !重要; /* 减少外边距 */
+            margin: 3px 0 !important; /*外边距 */
             font-weight: normal;
         }
         
         /* 对话内容区域样式 */
         .stChatMessage {
-            padding: 8px !重要; /* 减少内边距 */
-            border-radius: 8px !重要; /* 减小圆角 */
-            margin-bottom: 6px !重要; /* 减少底部外边距 */
+            padding: 8px !important; /* 内边距 */
+            border-radius: 8px !important; /* 圆角 */
+            margin-bottom: 6px !important; /* 底部外边距 */
         }
         
         /* 让输入框在聊天对话区域更加紧凑 */
         .stChatInput {
-            margin-top: 8px !重要; /* 减少顶部外边距 */
-            margin-bottom: 8px !重要; /* 减少底部外边距 */
-            padding: 3px !重要; /* 减少内边距 */
+            margin-top: 8px !important; /* 顶部外边距 */
+            margin-bottom: 8px !important; /* 底部外边距 */
+            padding: 3px !important; /* 内边距 */
         }
         
         /* 隐藏Streamlit默认元素的外边距 */
         div.css-1kyxreq {
-            margin-top: 0.3rem !重要;
-            margin-bottom: 0.3rem !重要;
+            margin-top: 0.3rem !important;
+            margin-bottom: 0.3rem !important;
         }
         
-        /* 减少各种Streamlit元素的垂直间距 */
+        /* 各种Streamlit元素的垂直间距 */
         .stButton, .stTextInput, .stSelectbox, .stFileUploader {
             margin-bottom: 0.3rem;
         }
         
-        /* 修复列对齐问题，减少列间距 */
+        /* 修复列对齐问题 */
         div[data-testid="column"] {
-            padding: 0 !重要;
-            margin: 0 !重要;
+            padding: 0 !important;
+            margin: 0 !important;
         }
         
         /* 减少tab内部元素的间距 */
@@ -202,22 +202,22 @@ def render_ui(get_alternative_parts_func):
             margin-bottom: 0.3rem;
         }
         
-        /* 减少单个元器件查询和BOM批量查询tab之间的垂直间距 */
+        /* 单个元器件查询和BOM批量查询tab之间的垂直间距 */
         .stTabs {
-            margin-bottom: 0.5rem !重要;
+            margin-bottom: 0.5rem !important;
         }
         
         /* 处理输入框的提示文字 */
         .stChatInput textarea::placeholder, .stChatInput input::placeholder {
-            color: #8c9bb5 !重要;
-            font-size: 1rem !重要; /* 减小字体大小 */
+            color: #8c9bb5 !important;
+            font-size: 1rem !important; /* 减小字体大小 */
         }
     </style>
     """, unsafe_allow_html=True)
 
     # 使用容器包裹标题，以应用额外样式
     st.markdown('<div class="header-container">', unsafe_allow_html=True)
-    st.markdown('<h1 class="main-header">BOM 元器件国产替代推荐工具</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">半岛智芯优选</h1>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 在此处添加选项卡，区分单个查询和批量查询
@@ -232,7 +232,7 @@ def render_ui(get_alternative_parts_func):
             col1, col2, col3 = st.columns([3, 0.8, 0.8])  # 调整列比例以容纳两个按钮
             with col1:
                 st.markdown('<div class="search-input">', unsafe_allow_html=True)
-                # 修改输入框，添加 on_change 参数和键盘事件处理
+                # 输入框，添加 on_change 参数和键盘事件处理
                 part_number = st.text_input("元器件型号", placeholder="输入元器件型号，例如：STM32F103C8", label_visibility="collapsed", 
                                             key="part_number_input", on_change=handle_enter_press)
                 st.markdown('</div>', unsafe_allow_html=True)
@@ -243,13 +243,13 @@ def render_ui(get_alternative_parts_func):
             with col3:
                 st.markdown('<div class="search-button ai-chat-button">', unsafe_allow_html=True)
                 # 简化AI对话按钮，直接切换会话状态
-                if st.button("💬 AI对话助手", key="chat_btn1", use_container_width=True):
+                if st.button("💬 AI选型助手", key="chat_btn1", use_container_width=True):
                     st.session_state.show_chat = not st.session_state.show_chat
                     # 如果是首次打开对话，添加欢迎消息
                     if st.session_state.show_chat and not st.session_state.chat_messages:
                         st.session_state.chat_messages = [{
                             "role": "assistant",
-                            "content": "你好！我是电子元器件专家助手。我可以回答您关于电子元器件的问题，包括参数、应用场景、替代方案和设计建议等。请告诉我您想了解什么？"
+                            "content": "👋 您好！我是元器件选型助手\n\n**我可以帮您：**\n\n📌 查找国产替代方案\n📌 对比元器件参数\n📌 评估供应链风险\n📌 分析设计兼容性"
                         }]
                 st.markdown('</div>', unsafe_allow_html=True)
             
@@ -301,7 +301,7 @@ def render_ui(get_alternative_parts_func):
                 if uploaded_file.name.endswith('.csv'):
                     df_preview = pd.read_csv(uploaded_file)  # 移除nrows=5限制，显示所有行
                 else:
-                    df_preview = pd.read_excel(uploaded_file)  # 移除nrows=5限制，显示所有行
+                    df_preview = pd.read_excel(uploaded_file) 
                 
                 with st.expander("查看BOM文件预览", expanded=True):
                     st.dataframe(df_preview)
@@ -380,47 +380,13 @@ def render_ui(get_alternative_parts_func):
                     
                     # 显示详细结果
                     with st.expander("查看详细替代方案", expanded=False):
+                        # 使用与单个查询相同的display_search_results函数来显示结果
                         for mpn, result_info in batch_results.items():
                             alts = result_info.get('alternatives', [])
                             name = result_info.get('name', '')
                             st.markdown(f"### {mpn} ({name})")
                             if alts:
-                                # 修改为竖向排列，每个替代方案占据整行
-                                for i, rec in enumerate(alts[:3], 1):
-                                    # 构建型号和品牌的展示
-                                    model_display = rec['model']
-                                    if 'brand' in rec and rec['brand'] and rec['brand'] != '未知品牌':
-                                        model_display = f"{model_display} ({rec['brand']})"
-                                    
-                                    # 使用与单次查询相同的卡片样式，改为纵向排列
-                                    st.markdown(f"""
-                                    <div class="solution-block">
-                                        <div class="result-card">
-                                            <div class="card-header">
-                                                <div class="model-container">
-                                                    <div class="solution-number">方案 {i}</div>
-                                                    <div class="type-badge">{rec.get('type', '未知')}</div>
-                                                    <h2 class="model-title" title="{model_display}">{model_display}</h2>
-                                                </div>
-                                            </div>
-                                            <div class="info-row">
-                                                <div class="info-label">类型：</div>
-                                                <div class="info-value">{rec.get('category', '未知类别')}</div>
-                                            </div>
-                                            <div class="info-row">
-                                                <div class="info-label">封装：</div>
-                                                <div class="info-value">{rec.get('package', '未知封装')}</div>
-                                            </div>
-                                            <div class="info-row parameters">
-                                                <div class="info-label">参数：</div>
-                                                <div class="info-value">{rec['parameters']}</div>
-                                            </div>
-                                            <div class="card-footer">
-                                                <a href="{rec['datasheet']}" target="_blank" class="datasheet-link">查看数据手册</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
+                                display_search_results(mpn, alts)
                             else:
                                 st.info("未找到替代方案")
                             st.markdown("---")
@@ -436,6 +402,10 @@ def render_ui(get_alternative_parts_func):
                         alts = result_info.get('alternatives', [])
                         name = result_info.get('name', '')
                         description = result_info.get('description', '')
+                        
+                        # 确保alts是列表类型
+                        if not isinstance(alts, list):
+                            alts = []
                         
                         # 如果没有替代方案，添加一个"未找到替代方案"的记录
                         if not alts:
@@ -455,6 +425,10 @@ def render_ui(get_alternative_parts_func):
                         else:
                             # 添加找到的替代方案
                             for i, alt in enumerate(alts, 1):
+                                # 确保alt是字典类型
+                                if not isinstance(alt, dict):
+                                    continue
+                                    
                                 result_data.append({
                                     "原元器件名称": name,
                                     "原型号": mpn,
@@ -530,7 +504,7 @@ def render_ui(get_alternative_parts_func):
             col1, col2 = st.columns([10, 1])
             with col1:
                 st.markdown('<div class="chat-header">', unsafe_allow_html=True)
-                st.markdown('<h3 class="chat-title">🤖 电子元器件专家助手</h3>', unsafe_allow_html=True)
+                st.markdown('<h3 class="chat-title">🤖 元器件选型专家助手</h3>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             with col2:
                 if st.button("✕", key="close_chat_btn"):
@@ -541,8 +515,8 @@ def render_ui(get_alternative_parts_func):
             if len(st.session_state.chat_messages) == 0:
                 st.markdown("""
                 <div class="welcome-message">
-                我是元器件知识小助手，如果你有关于元器件的问题，请随时告诉我，我会尽我所能提供解答。
-                <div class="note-text">注：AI智能回复，仅供参考，建议决策时进行多方信息验证。</div>
+                我是元器件选型助手，可帮您寻找替代方案和进行选型分析。
+                <div class="note-text">请从下方选择示例问题或直接输入您的需求</div>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -562,9 +536,9 @@ def render_ui(get_alternative_parts_func):
             st.markdown("<p>👇 <b>常见问题示例</b>：</p>", unsafe_allow_html=True)
             
             # 使用行布局，一行一个按钮
-            if st.button("有哪些主要型号的LM2596的参数和特性?", key="preset_q1", use_container_width=True):
+            if st.button("📊 推荐工业级3.3V LDO，要求输入电压≥5V，输出电流500mA，静态电流<50μA，通过AEC-Q100认证", key="preset_q1", use_container_width=True):
                 # 添加用户问题到对话历史
-                preset_question = "有哪些主要型号的LM2596的参数和特性?"
+                preset_question = "📊 推荐工业级3.3V LDO，要求：\n\n输入电压≥5V\n\n输出电流500mA\n\n静态电流<50μA\n\n通过AEC-Q100认证"
                 st.session_state.chat_messages.append({"role": "user", "content": preset_question})
                 
                 # 调用backend模块获取回复
@@ -586,9 +560,33 @@ def render_ui(get_alternative_parts_func):
                 st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
                 st.rerun()
             
-            if st.button("LDO的常见应用场景有哪些?", key="preset_q2", use_container_width=True):
+            if st.button("🌐 设计纽扣电池供电的IoT传感器节点，输入电压2.5-3.3V，低功耗要求", key="preset_q2", use_container_width=True):
                 # 添加用户问题到对话历史
-                preset_question = "LDO的常见应用场景有哪些?"
+                preset_question = "🌐 设计纽扣电池供电的IoT传感器节点：\n\n输入电压：2.5-3.3V（CR2032）\n\n负载需求：\n• MCU：3.3V/5mA（工作） + 1μA（睡眠）\n• 传感器：每5分钟激活10秒\n\n要求整体静态电流<3μA"
+                st.session_state.chat_messages.append({"role": "user", "content": preset_question})
+                
+                # 调用backend模块获取回复
+                import sys
+                import os
+                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                from backend import chat_with_expert
+                
+                with st.spinner("思考中..."):
+                    response_stream = chat_with_expert(preset_question)
+                    full_response = ""
+                    for chunk in response_stream:
+                        if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
+                            content = chunk.choices[0].delta.content
+                            if content:
+                                full_response += content
+                
+                # 将AI回复添加到对话历史
+                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
+                st.rerun()
+                
+            if st.button("🔧 寻找BSS138的替代型号，要求SOT-23封装，Vds≥30V，供货稳定的国产优选", key="preset_q3", use_container_width=True):
+                # 添加用户问题到对话历史
+                preset_question = "🔧 寻找BSS138的替代型号，要求：\n\nSOT-23封装\n\nVds≥30V\n\n供货稳定的国产优选"
                 st.session_state.chat_messages.append({"role": "user", "content": preset_question})
                 
                 # 调用backend模块获取回复
@@ -610,34 +608,10 @@ def render_ui(get_alternative_parts_func):
                 st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
                 st.rerun()
             
-            if st.button("如何使用TPS5450设计一个稳定的电源电路?", key="preset_q3", use_container_width=True):
-                # 添加用户问题到对话历史
-                preset_question = "如何使用TPS5450设计一个稳定的电源电路?"
-                st.session_state.chat_messages.append({"role": "user", "content": preset_question})
-                
-                # 调用backend模块获取回复
-                import sys
-                import os
-                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                from backend import chat_with_expert
-                
-                with st.spinner("思考中..."):
-                    response_stream = chat_with_expert(preset_question)
-                    full_response = ""
-                    for chunk in response_stream:
-                        if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                            content = chunk.choices[0].delta.content
-                            if content:
-                                full_response += content
-                
-                # 将AI回复添加到对话历史
-                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
-                st.rerun()
-                
             st.markdown('</div>', unsafe_allow_html=True)
             
             # 用户输入
-            user_input = st.chat_input("请输入您的问题...")
+            user_input = st.chat_input("请输入您的元器件选型或替代方案需求...")
             if user_input:
                 # 显示用户输入
                 with st.chat_message("user"):
@@ -682,7 +656,7 @@ def render_ui(get_alternative_parts_func):
             if st.button("清除对话记录", key="clear_chat_btn"):
                 st.session_state.chat_messages = [{
                     "role": "assistant", 
-                    "content": "对话已清除。有什么我可以帮到您的？"
+                    "content": "对话已清除。请告诉我您需要查找什么元器件的替代方案或有什么选型需求？"
                 }]
                 st.rerun()
             
@@ -776,53 +750,13 @@ def render_ui(get_alternative_parts_func):
             
             # 显示详细结果
             with st.expander("查看详细替代方案", expanded=False):
+                # 使用与单个查询相同的display_search_results函数来显示结果
                 for mpn, result_info in batch_results.items():
-                    # 处理新旧格式
-                    if isinstance(result_info, dict) and 'alternatives' in result_info:
-                        alts = result_info.get('alternatives', [])
-                        name = result_info.get('name', '')
-                        st.markdown(f"### {mpn} ({name})")
-                    else:
-                        alts = result_info if isinstance(result_info, list) else []
-                        st.markdown(f"### {mpn}")
-                    
+                    alts = result_info.get('alternatives', [])
+                    name = result_info.get('name', '')
+                    st.markdown(f"### {mpn} ({name})")
                     if alts:
-                        # 修改为竖向排列
-                        for i, rec in enumerate(alts[:3], 1):
-                            # 构建型号和品牌的展示
-                            model_display = rec['model']
-                            if 'brand' in rec and rec['brand'] and rec['brand'] != '未知品牌':
-                                model_display = f"{model_display} ({rec['brand']})"
-                            
-                            # 使用与单次查询相同的卡片样式，改为纵向排列
-                            st.markdown(f"""
-                            <div class="solution-block">
-                                <div class="result-card">
-                                    <div class="card-header">
-                                        <div class="model-container">
-                                            <div class="solution-number">方案 {i}</div>
-                                            <div class="type-badge">{rec.get('type', '未知')}</div>
-                                            <h2 class="model-title" title="{model_display}">{model_display}</h2>
-                                        </div>
-                                    </div>
-                                    <div class="info-row">
-                                        <div class="info-label">类型：</div>
-                                        <div class="info-value">{rec.get('category', '未知类别')}</div>
-                                    </div>
-                                    <div class="info-row">
-                                        <div class="info-label">封装：</div>
-                                        <div class="info-value">{rec.get('package', '未知封装')}</div>
-                                    </div>
-                                    <div class="info-row parameters">
-                                        <div class="info-label">参数：</div>
-                                        <div class="info-value">{rec['parameters']}</div>
-                                    </div>
-                                    <div class="card-footer">
-                                        <a href="{rec['datasheet']}" target="_blank" class="datasheet-link">查看数据手册</a>
-                                    </div>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                        display_search_results(mpn, alts)
                     else:
                         st.info("未找到替代方案")
                     st.markdown("---")
@@ -846,63 +780,138 @@ def render_ui(get_alternative_parts_func):
 # 抽取显示结果的函数，以便重复使用
 def display_search_results(part_number, recommendations):
     # 结果区域添加容器
-    st.markdown('<div class="results-container">', unsafe_allow_html=True)
+    st.markdown(f"已为 **{part_number}** 找到 {len(recommendations)} 种替代方案")
     
     if recommendations:
-        # 使用自定义样式的成功消息
-        st.markdown(f"""
-        <div class="success-box st-emotion-cache-16idsys">
-            <p>已为 <b>{part_number}</b> 找到 {len(recommendations)} 种替代方案</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # 获取推荐数量
-        rec_count = min(3, len(recommendations))
-        
-        # 纵向展示每个方案
-        for i in range(rec_count):
-            rec = recommendations[i]
-            
-            # 构建型号和品牌的展示
-            model_display = rec['model']
-            if 'brand' in rec and rec['brand'] and rec['brand'] != '未知品牌':
-                model_display = f"{model_display} ({rec['brand']})"
-            
-            # 创建方案卡片 - 纵向排列
-            st.markdown(f"""
-            <div class="solution-block">
-                <div class="result-card">
-                    <div class="card-header">
-                        <div class="model-container">
-                            <div class="solution-number">方案 {i+1}</div>
-                            <div class="type-badge">{rec.get('type', '未知')}</div>
-                            <h2 class="model-title" title="{model_display}">{model_display}</h2>
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">类型：</div>
-                        <div class="info-value">{rec.get('category', '未知类别')}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">封装：</div>
-                        <div class="info-value">{rec.get('package', '未知封装')}</div>
-                    </div>
-                    <div class="info-row parameters">
-                        <div class="info-label">参数：</div>
-                        <div class="info-value">{rec['parameters']}</div>
-                    </div>
-                    <div class="card-footer">
-                        <a href="{rec['datasheet']}" target="_blank" class="datasheet-link">查看数据手册</a>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
+        # 添加CSS样式 - 调整价格对齐和Pin兼容突出显示
         st.markdown("""
-        <div class="no-result-box">
-            <h3>未找到合适的替代方案</h3>
-            <p>请尝试修改搜索关键词或查询其他型号</p>
-        </div>
+        <style>
+            div.card-wrapper {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                gap: 15px;
+                padding-bottom: 10px;
+            }
+            .price-value {
+                color: #e53935;
+                font-weight: bold;
+                min-width: 80px; /* 设置最小宽度确保对齐 */
+                display: inline-block; /* 使宽度设置生效 */
+            }
+            /* Pin兼容突出显示样式 */
+            .pin-compatible {
+                background-color: #4CAF50 !important; 
+                color: white !important;
+                font-weight: bold !important;
+                border: 2px solid #2E7D32 !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+            }
+            .non-pin-compatible {
+                background-color: #FFA726 !important;
+                color: white !important;
+            }
+            /* 调整信息行样式确保对齐 */
+            .info-row {
+                display: flex;
+                margin-bottom: 5px;
+            }
+            .info-label {
+                width: 80px;
+                font-weight: 500;
+            }
+            .info-value {
+                flex: 1;
+            }
+        </style>
         """, unsafe_allow_html=True)
         
-    st.markdown('</div>', unsafe_allow_html=True)
+        # 创建列容器来强制横向布局
+        cols = st.columns(len(recommendations))
+        
+        # 在每个列中放置一个卡片
+        for i, (col, rec) in enumerate(zip(cols, recommendations), 1):
+            with col:
+                # 卡片标题栏
+                st.markdown(f"### 方案 {i}")
+                
+                # 国产/进口标签
+                if rec['type'] == "国产":
+                    st.markdown("<span style='background-color: #ef5350; color: white; padding: 2px 8px; border-radius: 4px;'>国产</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown("<span style='background-color: #42a5f5; color: white; padding: 2px 8px; border-radius: 4px;'>进口</span>", unsafe_allow_html=True)
+                
+                # 品牌显示栏
+                st.markdown(f"""
+                <div style='background-color: #4CAF50; color: white; padding: 8px 16px; border-radius: 4px; margin-bottom: 10px;'>
+                    {rec.get('brand', '未知品牌')}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # 型号名称
+                st.markdown(f"### {rec.get('model', '未知型号')} ({rec.get('category', '未知类别')})")
+                
+                # Pin-to-Pin兼容性显示 - 根据兼容性添加不同的样式类
+                pin_to_pin = rec.get('pinToPin', False)
+                pin_class = "pin-compatible" if pin_to_pin else "non-pin-compatible"
+                pin_text = "Pin兼容" if pin_to_pin else "非Pin兼容"
+                
+                st.markdown(f"""
+                <div class="{pin_class}" style='padding: 8px 16px; border-radius: 4px; margin-bottom: 10px; text-align: center;'>
+                    {pin_text}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # 参数信息表格
+                st.markdown("""
+                <div style="margin-top: 10px;">
+                """, unsafe_allow_html=True)
+                
+                # 使用统一布局确保对齐
+                st.markdown("""
+                <div class="info-row">
+                    <div class="info-label">类型：</div>
+                    <div class="info-value">{}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">封装：</div>
+                    <div class="info-value">{}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">价格：</div>
+                    <div class="info-value price-value">{}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">兼容性：</div>
+                    <div class="info-value">{}</div>
+                </div>
+                """.format(
+                    rec.get('category', 'MCU'), 
+                    rec.get('package', 'LQFP48'),
+                    rec.get('price', '未知'),
+                    rec.get('compatibility', '引脚完全兼容，软件需少量修改')
+                ), unsafe_allow_html=True)
+                
+                # 参数详情
+                st.markdown("""
+                <div class="info-row">
+                    <div class="info-label">参数：</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"{rec.get('parameters', 'CPU内核: ARM Cortex-M3, 主频: 72MHz, Flash: 64KB, RAM: 20KB, IO: 37')}")
+                
+                # 供货周期
+                st.markdown("""
+                <div class="info-row">
+                    <div class="info-label">供货周期：</div>
+                    <div class="info-value">{}</div>
+                </div>
+                """.format(rec.get('leadTime', '3-5周')), unsafe_allow_html=True)
+                
+                # 数据手册链接
+                st.markdown(f"[查看数据手册]({rec.get('datasheet', 'https://example.com')})")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+    else:
+        st.info("未找到替代方案")
