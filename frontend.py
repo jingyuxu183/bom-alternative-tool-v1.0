@@ -3,21 +3,53 @@ from datetime import datetime
 import time
 import pandas as pd
 import tempfile  # 用于创建临时文件，支持文件下载功能
+from custom_components.hide_sidebar_items import get_sidebar_hide_code
 
 def render_ui(get_alternative_parts_func):
     # Streamlit 界面 - 确保 set_page_config 是第一个Streamlit命令
     st.set_page_config(page_title="BOM 元器件国产替代推荐工具", layout="wide")
     
+    # 应用隐藏run和chat按钮的代码
+    hide_code = get_sidebar_hide_code()
+    st.markdown(hide_code, unsafe_allow_html=True)
+    
     # 初始化会话状态变量，用于处理回车键事件
     if 'search_triggered' not in st.session_state:
         st.session_state.search_triggered = False
     
-    # 初始化AI对话相关的状态 - 使用一个简单的布尔值控制对话框显示
-    if 'show_chat' not in st.session_state:
-        st.session_state.show_chat = False
+    # 初始化聊天消息历史
     if 'chat_messages' not in st.session_state:
-        st.session_state.chat_messages = []
-        
+        st.session_state.chat_messages = [{
+            "role": "assistant",
+            "content": "👋 您好！我是元器件选型助手\n\n**我可以帮您：**\n\n📌 查找国产替代方案\n📌 对比元器件参数\n📌 评估供应链风险\n📌 分析设计兼容性"
+        }]
+    
+    # 检查是否通过URL参数直接跳转到聊天界面
+    query_params = st.query_params
+    if 'page' in query_params and query_params.get('page') == 'chat':
+        # 直接重定向到主页
+        st.markdown("""
+        <style>
+        .chat-redirect {
+            text-align: center;
+            margin: 50px auto;
+            max-width: 600px;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        </style>
+        <div class="chat-redirect">
+            <h2>聊天功能已集成</h2>
+            <p>我们的AI选型助手已集成到主界面的第三个标签页中</p>
+            <script>
+                window.location.href = "/";
+            </script>
+        </div>
+        """, unsafe_allow_html=True)
+        return
+    
     # 处理回车键的回调函数
     def handle_enter_press():
         if st.session_state.part_number_input:  # 检查输入框是否有内容
@@ -29,6 +61,16 @@ def render_ui(get_alternative_parts_func):
         /* 整体页面样式 */
         .stApp {
             background-color: #f8f9fa;
+        }
+        
+        /* 隐藏Streamlit的info容器 */
+        div[data-testid="stInfoAlert"] {
+            display: none !important;
+        }
+        
+        /* 隐藏Streamlit的success容器 - 用于隐藏"识别到的关键列"信息 */
+        div[data-testid="stSuccessAlert"] {
+            display: none !important;
         }
         
         /* 标题样式 */
@@ -62,10 +104,52 @@ def render_ui(get_alternative_parts_func):
             padding-top: 0.3rem !important; /* 顶部内边距 */
         }
         
-        /* 修改标签样式，减少空间 */
+        /* 修改标签样式，增大标签尺寸 */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 20px !important; /* 标签之间的间距 */
+            gap: 40px !important; /* 标签之间的间距 */
             margin-bottom: 0 !important; /* 底部外边距 */
+            margin-top: 0 !important; /* 顶部外边距 */
+            border-bottom: none !important; /* 移除底部边框 */
+            padding-bottom: 15px !important; /* 底部内边距 */
+            justify-content: center !important; /* 居中标签 */
+        }
+        
+        /* 增大标签页的字体大小和按钮大小 */
+        button[data-baseweb="tab"] {
+            font-size: 1.25rem !important; /* 大约是主标题的一半大小 */
+            font-weight: 600 !important;
+            padding: 15px 30px !important; /* 增加内边距让按钮更大 */
+            border-radius: 8px !important; /* 圆角边框 */
+            margin: 0 10px !important; /* 按钮间距 */
+            transition: all 0.3s ease !important; /* 平滑过渡效果 */
+            background-color: #f0f2f6 !important; /* 默认背景色 */
+        }
+        
+        /* 标签激活状态 */
+        button[data-baseweb="tab"][aria-selected="true"] {
+            color: white !important;
+            background-color: #1a73e8 !important;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.2) !important;
+        }
+        
+        /* 标签鼠标悬停效果 */
+        button[data-baseweb="tab"]:hover {
+            background-color: #e0e7ff !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        button[data-baseweb="tab"][aria-selected="true"]:hover {
+            background-color: #1a73e8 !important;
+        }
+        
+        /* 移除标签条下方的额外空间 */
+        .stTabs [data-baseweb="tab-panel"] {
+            margin-top: 20px !important;
+        }
+        
+        /* 增加标签下划线 */
+        [data-baseweb="tab-highlight"] {
+            display: none !important; /* 隐藏默认下划线，改为使用背景色区分 */
         }
         
         /* 搜索区域样式 */
@@ -93,6 +177,37 @@ def render_ui(get_alternative_parts_func):
             width: 100%;
         }
         
+        /* 搜索输入框样式增强 */
+        .search-input {
+            width: 100%;
+        }
+        
+        /* 增强输入框可见度和对比度 */
+        .stTextInput input {
+            background-color: white !important;
+            border: 2px solid #1a73e8 !important;
+            border-radius: 6px !important;
+            padding: 10px 15px !important;
+            font-size: 1.05rem !important;
+            color: #202124 !important;
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.1) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        /* 输入框:focus状态 */
+        .stTextInput input:focus {
+            border: 2px solid #1a73e8 !important;
+            box-shadow: 0 3px 8px rgba(26, 115, 232, 0.25) !important;
+            outline: none !important;
+        }
+        
+        /* 输入框占位符文字样式 */
+        .stTextInput input::placeholder {
+            color: #5f6368 !important;
+            opacity: 0.8 !important;
+            font-weight: 400 !important;
+        }
+        
         /* 整体页面的内边距 */
         .block-container {
             padding-top: 0.5rem !important; /* 顶部内边距 */
@@ -108,16 +223,34 @@ def render_ui(get_alternative_parts_func):
             margin-bottom: 0.3rem !important; /* 底部外边距 */
         }
         
-        /* 聊天容器样式 */
-        .chat-container {
-            max-width: 800px;
+        /* 聊天容器样式 - 全屏模式 */
+        .fullscreen-chat {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        
+        /* 聊天内容区域 */
+        .chat-content {
+            flex: 1;
+            max-width: 900px;
+            width: 100%;
             margin: 0 auto;
             background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 0.8rem; /* 内边距 */
-            margin-top: 0.5rem; /* 顶部外边距 */
-            margin-bottom: 0.5rem; /* 底部外边距 */
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
         
         /* 对话框标题区域*/
@@ -125,18 +258,38 @@ def render_ui(get_alternative_parts_func):
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 5px; /* 底部内边距 */
+            margin-bottom: 15px;
+            padding-bottom: 10px; /* 底部内边距 */
             border-bottom: 1px solid #eee;
         }
         
         /* 对话框标题 */
         .chat-title {
-            margin-bottom: 0.5rem; /* 底部外边距 */
-            text-align: center;
-            font-size: 1.3rem; /* 字体大小 */
+            margin: 0; /* 移除默认外边距 */
+            font-size: 1.5rem; /* 字体大小 */
             font-weight: 600;
             color: #2c3e50;
+        }
+        
+        /* 关闭按钮样式 */
+        .close-button {
+            cursor: pointer;
+            background-color: #f0f0f0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #555;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .close-button:hover {
+            background-color: #e0e0e0;
+            color: #333;
         }
         
         /* 预设问题容器  */
@@ -212,6 +365,39 @@ def render_ui(get_alternative_parts_func):
             color: #8c9bb5 !important;
             font-size: 1rem !important; /* 减小字体大小 */
         }
+        
+        /* 侧边栏样式 */
+        [data-testid="stSidebar"] {
+            background-color: #f8f9fa;
+            padding-top: 1rem;
+        }
+        
+        /* 侧边栏标题样式 */
+        [data-testid="stSidebar"] h1 {
+            font-size: 1.5rem;
+            color: #1a73e8;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e6e9ef;
+        }
+        
+        /* 侧边栏历史记录项目样式 */
+        [data-testid="stSidebar"] .element-container {
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* 侧边栏按钮样式 */
+        [data-testid="stSidebar"] button {
+            background-color: #f0f4fd;
+            border: none;
+            color: #1a73e8;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        [data-testid="stSidebar"] button:hover {
+            background-color: #e0e9fa;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -220,16 +406,16 @@ def render_ui(get_alternative_parts_func):
     st.markdown('<h1 class="main-header">半岛智芯优选</h1>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 在此处添加选项卡，区分单个查询和批量查询
-    tab1, tab2 = st.tabs(["单个元器件查询", "BOM批量查询"])
+    # 在此处添加选项卡，区分单个查询、批量查询和AI选型助手
+    tab1, tab2, tab3 = st.tabs(["单个元器件查询", "BOM批量查询", "💬 AI选型助手"])
     
     with tab1:
-        # 搜索区域 - 修改结构，确保输入框和按钮完全匹配并添加AI对话按钮
+        # 搜索区域 - 修改结构，确保输入框和按钮完全匹配
         with st.container():
             st.markdown('<div class="search-area">', unsafe_allow_html=True)
             st.markdown('<div class="search-container">', unsafe_allow_html=True)
             
-            col1, col2, col3 = st.columns([3, 0.8, 0.8])  # 调整列比例以容纳两个按钮
+            col1, col2 = st.columns([3, 0.8])  # 调整列比例
             with col1:
                 st.markdown('<div class="search-input">', unsafe_allow_html=True)
                 # 输入框，添加 on_change 参数和键盘事件处理
@@ -238,19 +424,7 @@ def render_ui(get_alternative_parts_func):
                 st.markdown('</div>', unsafe_allow_html=True)
             with col2:
                 st.markdown('<div class="search-button">', unsafe_allow_html=True)
-                search_button = st.button("查询替代方案", use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            with col3:
-                st.markdown('<div class="search-button ai-chat-button">', unsafe_allow_html=True)
-                # 简化AI对话按钮，直接切换会话状态
-                if st.button("💬 AI选型助手", key="chat_btn1", use_container_width=True):
-                    st.session_state.show_chat = not st.session_state.show_chat
-                    # 如果是首次打开对话，添加欢迎消息
-                    if st.session_state.show_chat and not st.session_state.chat_messages:
-                        st.session_state.chat_messages = [{
-                            "role": "assistant",
-                            "content": "👋 您好！我是元器件选型助手\n\n**我可以帮您：**\n\n📌 查找国产替代方案\n📌 对比元器件参数\n📌 评估供应链风险\n📌 分析设计兼容性"
-                        }]
+                search_button = st.button("查询替代方案", use_container_width=True, key="search_button")
                 st.markdown('</div>', unsafe_allow_html=True)
             
             st.markdown('</div>', unsafe_allow_html=True)
@@ -281,20 +455,42 @@ def render_ui(get_alternative_parts_func):
                     display_search_results(part_number, recommendations)
     
     with tab2:
+        # 文件上传区域 - 使用更醒目的样式
         st.markdown("""
-        ### 批量查询BOM元器件国产替代方案
+        <style>
+        .css-1eqt8kt {
+            border: 2px dashed #4285F4 !important;
+            border-radius: 10px !important;
+            padding: 20px !important;
+            background-color: rgba(66, 133, 244, 0.05) !important;
+        }
+        /* 移除上传控件下方的空白区域 */
+        .css-18e3th9 {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        /* 修复整体元素垂直间距，减少空白区域 */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 0 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         
-        上传您的BOM文件（支持 Excel、CSV 格式），工具将自动识别元器件并查询替代方案。
-        """)
+        st.markdown("""
+        <div style="text-align:center; padding:20px 0 10px 0;">
+            <p style="font-size:1.1rem;">📋 请上传BOM文件进行批量查询替代方案</p>
+            <p style="color:#666; font-size:0.9rem;">支持Excel(.xlsx/.xls)和CSV文件格式</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # 文件上传区域
-        uploaded_file = st.file_uploader("上传BOM文件", type=["xlsx", "xls", "csv"])
+        uploaded_file = st.file_uploader("上传BOM文件", type=["xlsx", "xls", "csv"], label_visibility="collapsed")
         
         if uploaded_file is not None:
             # 批量处理按钮 - 移除AI对话按钮，使用单列布局
             col1, col2 = st.columns([3, 1])  # 调整比例，使按钮靠右对齐
             with col2:
-                batch_process_button = st.button("开始批量查询", use_container_width=True)
+                batch_process_button = st.button("开始批量查询", use_container_width=True, key="batch_button")
             
             # 如果上传了文件，尝试预览
             try:
@@ -303,8 +499,9 @@ def render_ui(get_alternative_parts_func):
                 else:
                     df_preview = pd.read_excel(uploaded_file) 
                 
-                with st.expander("查看BOM文件预览", expanded=True):
-                    st.dataframe(df_preview)
+                # 直接显示数据框，不使用expander
+                st.subheader("BOM文件预览")
+                st.dataframe(df_preview)
             except Exception as e:
                 st.error(f"文件预览失败: {e}")
             
@@ -326,9 +523,9 @@ def render_ui(get_alternative_parts_func):
                 if not components:
                     st.error("⚠️ 无法从BOM文件中识别元器件型号！")
                 else:
-                    # 显示识别到的列信息
-                    st.info(f"已识别 {len(components)} 个不同的元器件")
-                    st.success(f"识别到的关键列: 型号列({columns_info.get('mpn_column', '未识别')}), "
+                    # 将识别信息移至侧边栏
+                    st.sidebar.info(f"已识别 {len(components)} 个不同的元器件")
+                    st.sidebar.success(f"识别到的关键列: 型号列({columns_info.get('mpn_column', '未识别')}), "
                               f"名称列({columns_info.get('name_column', '未识别')}), "
                               f"描述列({columns_info.get('description_column', '未识别')})")
                     
@@ -347,7 +544,8 @@ def render_ui(get_alternative_parts_func):
                     
                     # 完成进度
                     progress_bar.progress(1.0)
-                    status_text.text(f"批量查询完成！处理了 {len(components)} 个元器件")
+                    # 隐藏处理完成提示
+                    status_text.empty()
                     
                     # 保存到历史记录
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -358,38 +556,24 @@ def render_ui(get_alternative_parts_func):
                         "type": "batch"
                     })
                     
-                    # 显示批量结果摘要
-                    st.subheader("批量查询结果摘要")
+                    # 直接显示详细的替代方案结果，不使用摘要表格
+                    st.subheader("批量查询结果")
                     
-                    # 创建结果摘要表格
-                    results_summary = []
+                    # 直接显示详细替代方案，不使用expander
                     for mpn, result_info in batch_results.items():
                         alts = result_info.get('alternatives', [])
                         name = result_info.get('name', '')
-                        results_summary.append({
-                            "元器件名称": name,
-                            "元器件型号": mpn,
-                            "找到替代方案数": len(alts),
-                            "国产替代方案": sum(1 for alt in alts if alt.get("type") == "国产"),
-                            "进口替代方案": sum(1 for alt in alts if alt.get("type") == "进口")
-                        })
-                    
-                    # 显示摘要表格
-                    df_summary = pd.DataFrame(results_summary)
-                    st.dataframe(df_summary)
-                    
-                    # 显示详细结果
-                    with st.expander("查看详细替代方案", expanded=False):
+                        
+                        # 显示每个元器件的标题
+                        st.markdown(f"### {mpn} ({name})")
+                        
                         # 使用与单个查询相同的display_search_results函数来显示结果
-                        for mpn, result_info in batch_results.items():
-                            alts = result_info.get('alternatives', [])
-                            name = result_info.get('name', '')
-                            st.markdown(f"### {mpn} ({name})")
-                            if alts:
-                                display_search_results(mpn, alts)
-                            else:
-                                st.info("未找到替代方案")
-                            st.markdown("---")
+                        if alts:
+                            display_search_results(mpn, alts)
+                        else:
+                            st.info("未找到替代方案")
+                        
+                        st.markdown("---")
                     
                     # 提供下载结果的选项
                     st.subheader("📊 下载查询结果")
@@ -486,196 +670,140 @@ def render_ui(get_alternative_parts_func):
                                 mime="text/csv",
                                 use_container_width=True
                             )
-                        
-                        # 添加下载说明
-                        st.info("💡 提示：Excel格式适合大多数办公软件查看，CSV格式兼容性更广但可能需要额外设置字符编码")
                     else:
                         st.warning("⚠️ 没有查询到任何替代方案，无法生成下载文件")
         else:
-            # 移除空白状态下的AI对话按钮
-            st.info("请上传BOM文件（Excel或CSV格式）进行批量查询")
+            # 空白展示区，不显示任何提示或装饰
+            pass
 
-    # 在此处显示AI对话界面 - 将其放在标签页之外，确保无论在哪个标签页都能显示
-    if st.session_state.show_chat:
+    with tab3:
+        # 聊天界面容器
         with st.container():
-            st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+            st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
             
-            # 聊天标题和关闭按钮
-            col1, col2 = st.columns([10, 1])
-            with col1:
-                st.markdown('<div class="chat-header">', unsafe_allow_html=True)
-                st.markdown('<h3 class="chat-title">🤖 元器件选型专家助手</h3>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            with col2:
-                if st.button("✕", key="close_chat_btn"):
-                    st.session_state.show_chat = False
+            # 创建一个两列布局，主要区域给聊天，侧边留给操作按钮
+            chat_col, btn_col = st.columns([4, 1])
+            
+            with chat_col:
+                # 显示对话历史的第一条欢迎消息
+                if st.session_state.chat_messages and st.session_state.chat_messages[0]["role"] == "assistant":
+                    with st.chat_message("assistant"):
+                        st.markdown(st.session_state.chat_messages[0]["content"])
+                
+                # 常见问题放在欢迎消息之后，输入框之前
+                st.subheader("常见问题示例")
+                if st.button("推荐工业级3.3V LDO，要求：输入电压≥5V，输出电流500mA，静态电流<50μA，通过AEC-Q100认证", key="preset_q1_tab", use_container_width=True):
+                    preset_question = "📊 推荐工业级3.3V LDO，要求：\n\n输入电压≥5V\n\n输出电流500mA\n\n静态电流<50μA\n\n通过AEC-Q100认证"
+                    st.session_state.chat_messages.append({"role": "user", "content": preset_question})
+                    
+                    # 调用backend模块获取回复
+                    import sys
+                    import os
+                    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                    from backend import chat_with_expert
+                    
+                    with st.spinner("思考中..."):
+                        try:
+                            response_stream = chat_with_expert(preset_question)
+                            full_response = ""
+                            for chunk in response_stream:
+                                if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
+                                    content = chunk.choices[0].delta.content
+                                    if content:
+                                        full_response += content
+                        
+                            # 将AI回复添加到对话历史
+                            st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
+                        except Exception as e:
+                            st.error(f"AI回复出错: {str(e)}")
+                            st.session_state.chat_messages.append({"role": "assistant", "content": f"抱歉，处理您的请求时出现错误: {str(e)}"})
+                    
+                    st.rerun()
+                
+                st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
+                
+                # 显示除第一条以外的对话历史
+                if len(st.session_state.chat_messages) > 1:
+                    for message in st.session_state.chat_messages[1:]:
+                        if message["role"] == "user":
+                            with st.chat_message("user"):
+                                st.markdown(message["content"])
+                        else:
+                            with st.chat_message("assistant"):
+                                st.markdown(message["content"])
+                
+                # 用户输入区域
+                user_input = st.chat_input("请输入您的元器件选型或替代方案需求...")
+                if user_input:
+                    # 显示用户输入
+                    with st.chat_message("user"):
+                        st.markdown(user_input)
+                    # 添加到对话历史
+                    st.session_state.chat_messages.append({"role": "user", "content": user_input})
+                    
+                    # 显示AI回复
+                    with st.chat_message("assistant"):
+                        with st.spinner("思考中..."):
+                            # 导入backend模块
+                            import sys
+                            import os
+                            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                            from backend import chat_with_expert
+                            
+                            try:
+                                # 调用AI对话函数并处理流式输出
+                                response_stream = chat_with_expert(
+                                    user_input, 
+                                    history=st.session_state.chat_messages[:-1]  # 不包括刚刚添加的用户消息
+                                )
+                                
+                                response_container = st.empty()
+                                full_response = ""
+                                
+                                # 处理流式响应
+                                for chunk in response_stream:
+                                    if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
+                                        content = chunk.choices[0].delta.content
+                                        if content:
+                                            full_response += content
+                                            response_container.markdown(full_response + "▌")
+                                
+                                # 显示最终结果
+                                response_container.markdown(full_response)
+                                
+                                # 将AI回复添加到对话历史
+                                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
+                            except Exception as e:
+                                error_msg = f"处理您的请求时出现错误: {str(e)}"
+                                st.error(error_msg)
+                                st.session_state.chat_messages.append({"role": "assistant", "content": f"抱歉，{error_msg}"})
+                    
+                    st.rerun()
+                
+                # 添加清除对话按钮到输入框下方
+                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                if st.button("🗑️ 清除对话记录", use_container_width=True, key="clear_chat_main"):
+                    st.session_state.chat_messages = [{
+                        "role": "assistant", 
+                        "content": "对话已清除。请告诉我您需要查找什么元器件的替代方案或有什么选型需求？"
+                    }]
                     st.rerun()
             
-            # 显示欢迎消息（始终显示，无论是否有对话历史）
-            if len(st.session_state.chat_messages) == 0:
-                st.markdown("""
-                <div class="welcome-message">
-                我是元器件选型助手，可帮您寻找替代方案和进行选型分析。
-                <div class="note-text">请从下方选择示例问题或直接输入您的需求</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # 显示对话历史记录
-            for message in st.session_state.chat_messages:
-                if message["role"] == "user":
-                    with st.chat_message("user"):
-                        st.markdown(message["content"])
-                else:
-                    with st.chat_message("assistant"):
-                        st.markdown(message["content"])
-            
-            # 预设问题区域 - 移动到这里，在对话历史和用户输入之间
-            st.markdown('<div class="preset-questions-container">', unsafe_allow_html=True)
-            
-            # 修改为更明显的样式，确保按钮足够突出
-            st.markdown("<p>👇 <b>常见问题示例</b>：</p>", unsafe_allow_html=True)
-            
-            # 使用行布局，一行一个按钮
-            if st.button("📊 推荐工业级3.3V LDO，要求输入电压≥5V，输出电流500mA，静态电流<50μA，通过AEC-Q100认证", key="preset_q1", use_container_width=True):
-                # 添加用户问题到对话历史
-                preset_question = "📊 推荐工业级3.3V LDO，要求：\n\n输入电压≥5V\n\n输出电流500mA\n\n静态电流<50μA\n\n通过AEC-Q100认证"
-                st.session_state.chat_messages.append({"role": "user", "content": preset_question})
-                
-                # 调用backend模块获取回复
-                import sys
-                import os
-                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                from backend import chat_with_expert
-                
-                with st.spinner("思考中..."):
-                    response_stream = chat_with_expert(preset_question)
-                    full_response = ""
-                    for chunk in response_stream:
-                        if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                            content = chunk.choices[0].delta.content
-                            if content:
-                                full_response += content
-                
-                # 将AI回复添加到对话历史
-                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
-                st.rerun()
-            
-            if st.button("🌐 设计纽扣电池供电的IoT传感器节点，输入电压2.5-3.3V，低功耗要求", key="preset_q2", use_container_width=True):
-                # 添加用户问题到对话历史
-                preset_question = "🌐 设计纽扣电池供电的IoT传感器节点：\n\n输入电压：2.5-3.3V（CR2032）\n\n负载需求：\n• MCU：3.3V/5mA（工作） + 1μA（睡眠）\n• 传感器：每5分钟激活10秒\n\n要求整体静态电流<3μA"
-                st.session_state.chat_messages.append({"role": "user", "content": preset_question})
-                
-                # 调用backend模块获取回复
-                import sys
-                import os
-                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                from backend import chat_with_expert
-                
-                with st.spinner("思考中..."):
-                    response_stream = chat_with_expert(preset_question)
-                    full_response = ""
-                    for chunk in response_stream:
-                        if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                            content = chunk.choices[0].delta.content
-                            if content:
-                                full_response += content
-                
-                # 将AI回复添加到对话历史
-                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
-                st.rerun()
-                
-            if st.button("🔧 寻找BSS138的替代型号，要求SOT-23封装，Vds≥30V，供货稳定的国产优选", key="preset_q3", use_container_width=True):
-                # 添加用户问题到对话历史
-                preset_question = "🔧 寻找BSS138的替代型号，要求：\n\nSOT-23封装\n\nVds≥30V\n\n供货稳定的国产优选"
-                st.session_state.chat_messages.append({"role": "user", "content": preset_question})
-                
-                # 调用backend模块获取回复
-                import sys
-                import os
-                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                from backend import chat_with_expert
-                
-                with st.spinner("思考中..."):
-                    response_stream = chat_with_expert(preset_question)
-                    full_response = ""
-                    for chunk in response_stream:
-                        if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                            content = chunk.choices[0].delta.content
-                            if content:
-                                full_response += content
-                
-                # 将AI回复添加到对话历史
-                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
-                st.rerun()
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # 用户输入
-            user_input = st.chat_input("请输入您的元器件选型或替代方案需求...")
-            if user_input:
-                # 显示用户输入
-                with st.chat_message("user"):
-                    st.markdown(user_input)
-                # 添加到对话历史
-                st.session_state.chat_messages.append({"role": "user", "content": user_input})
-                
-                # 显示AI回复
-                with st.chat_message("assistant"):
-                    with st.spinner("思考中..."):
-                        # 导入backend模块
-                        import sys
-                        import os
-                        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                        from backend import chat_with_expert
-                        
-                        # 调用AI对话函数并处理流式输出
-                        response_stream = chat_with_expert(
-                            user_input, 
-                            history=st.session_state.chat_messages[:-1]  # 不包括刚刚添加的用户消息
-                        )
-                        
-                        response_container = st.empty()
-                        full_response = ""
-                        
-                        # 处理流式响应
-                        for chunk in response_stream:
-                            if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                                content = chunk.choices[0].delta.content
-                                if content:
-                                    full_response += content
-                                    response_container.markdown(full_response + "▌")
-                        
-                        # 显示最终结果
-                        response_container.markdown(full_response)
-                
-                # 将AI回复添加到对话历史
-                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
-                st.rerun()
-            
-            # 清除对话按钮
-            if st.button("清除对话记录", key="clear_chat_btn"):
-                st.session_state.chat_messages = [{
-                    "role": "assistant", 
-                    "content": "对话已清除。请告诉我您需要查找什么元器件的替代方案或有什么选型需求？"
-                }]
-                st.rerun()
-            
-            st.markdown('</div>', unsafe_allow_html=True)
+            with btn_col:
+                # 空白区域，保持布局
+                st.markdown("<div style='margin-top: 80px;'></div>", unsafe_allow_html=True)
 
     # 在此处添加历史查询功能
     if 'search_history' not in st.session_state:
         st.session_state.search_history = []
-
-    # 修改历史记录展示区以支持批量查询记录
-    with st.expander("📜 历史查询记录", expanded=False):
-        st.markdown('<div class="history-area">', unsafe_allow_html=True)
+    
+    # 将历史查询记录移动到侧边栏中
+    with st.sidebar:
+        st.title("历史查询记录")
         
         # 历史记录标题和清除按钮
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.subheader("您的历史查询")
-        with col2:
-            if st.button("清除", key="clear_history") and len(st.session_state.search_history) > 0:
+        if len(st.session_state.search_history) > 0:
+            if st.button("清除历史记录", key="clear_history"):
                 st.session_state.search_history = []
                 st.rerun()
         
@@ -684,16 +812,17 @@ def render_ui(get_alternative_parts_func):
             st.info("暂无历史查询记录")
         else:
             for idx, history_item in enumerate(reversed(st.session_state.search_history)):
-                col1, col2 = st.columns([4, 1])
-                with col1:
-                    query_type = "批量查询" if history_item.get('type') == 'batch' else "单元器件查询"
+                query_type = "批量查询" if history_item.get('type') == 'batch' else "单元器件查询"
+                
+                # 创建一个带样式的容器
+                with st.container():
                     st.markdown(f"""
-                    <div class="history-item">
-                        <div class="history-header">
-                            <b>{history_item['part_number']}</b>
-                            <span class="timestamp">({query_type}) {history_item['timestamp']}</span>
+                    <div style="padding: 10px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #e6e6e6; background-color: #f9f9f9;">
+                        <div style="font-weight: bold;">{history_item['part_number']}</div>
+                        <div style="font-size: 0.8em; color: #666;">
+                            ({query_type}) {history_item['timestamp']}
                         </div>
-                        <div>
+                        <div style="margin-top: 5px; font-size: 0.9em;">
                             {
                                 '批量查询多个元器件' if history_item.get('type') == 'batch' 
                                 else f"找到 {len(history_item.get('recommendations', []))} 种替代方案"
@@ -701,12 +830,21 @@ def render_ui(get_alternative_parts_func):
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-                with col2:
-                    if st.button(f"查看", key=f"view_history_{idx}"):
+                    
+                    # 查看按钮
+                    if st.button(f"查看详情", key=f"view_history_{idx}", use_container_width=True):
                         st.session_state.selected_history = history_item
                         st.rerun()
         
-        st.markdown('</div>', unsafe_allow_html=True)
+        # 添加底部提示信息
+        st.markdown("<hr style='margin-top: 30px; margin-bottom: 15px; opacity: 0.3;'>", unsafe_allow_html=True)
+        st.markdown("<small style='color: #666; font-size: 0.8em;'>历史记录保存在会话中，刷新页面后将被清除</small>", unsafe_allow_html=True)
+        
+        # 添加工具提示
+        st.markdown("<div style='position: absolute; bottom: 20px; padding: 10px; width: calc(100% - 40px);'>", unsafe_allow_html=True)
+        st.caption("📌 提示: 点击查看详情可以查看历史查询结果")
+        st.caption("🔍 查询结果会自动保存到历史记录中")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # 修改历史记录查看逻辑，以支持批量查询结果
     if 'selected_history' in st.session_state:
@@ -716,58 +854,37 @@ def render_ui(get_alternative_parts_func):
         if history_item.get('type') == 'batch':
             # 显示批量查询结果
             st.subheader(f"历史批量查询结果: {history_item['part_number']}")
-            st.caption(f"查询时间: {history_item['timestamp']}")
             
             batch_results = history_item.get('batch_results', {})
             
-            # 创建结果摘要表格
-            results_summary = []
+            # 直接显示详细的替代方案结果，不使用摘要表格
+            st.subheader("批量查询结果")
+            
+            # 直接显示详细替代方案，不使用expander
             for mpn, result_info in batch_results.items():
-                if isinstance(result_info, dict) and 'alternatives' in result_info:
-                    # 新格式
-                    alts = result_info.get('alternatives', [])
-                    name = result_info.get('name', '')
-                    results_summary.append({
-                        "元器件名称": name,
-                        "元器件型号": mpn,
-                        "找到替代方案数": len(alts),
-                        "国产替代方案": sum(1 for alt in alts if alt.get("type") == "国产"),
-                        "进口替代方案": sum(1 for alt in alts if alt.get("type") == "进口")
-                    })
-                else:
-                    # 旧格式 - 兼容旧历史记录
-                    alts = result_info if isinstance(result_info, list) else []
-                    results_summary.append({
-                        "元器件型号": mpn,
-                        "找到替代方案数": len(alts),
-                        "国产替代方案": sum(1 for alt in alts if alt.get("type") == "国产"),
-                        "进口替代方案": sum(1 for alt in alts if alt.get("type") == "进口")
-                    })
-            
-            # 显示摘要表格
-            df_summary = pd.DataFrame(results_summary)
-            st.dataframe(df_summary)
-            
-            # 显示详细结果
-            with st.expander("查看详细替代方案", expanded=False):
+                alts = result_info.get('alternatives', [])
+                name = result_info.get('name', '')
+                
+                # 显示每个元器件的标题
+                st.markdown(f"### {mpn} ({name})")
+                
                 # 使用与单个查询相同的display_search_results函数来显示结果
-                for mpn, result_info in batch_results.items():
-                    alts = result_info.get('alternatives', [])
-                    name = result_info.get('name', '')
-                    st.markdown(f"### {mpn} ({name})")
-                    if alts:
-                        display_search_results(mpn, alts)
-                    else:
-                        st.info("未找到替代方案")
-                    st.markdown("---")
+                if alts:
+                    display_search_results(mpn, alts)
+                else:
+                    st.info("未找到替代方案")
+                
+                st.markdown("---")
         else:
             # 单个查询结果显示
             st.subheader(f"历史查询结果: {history_item['part_number']}")
-            st.caption(f"查询时间: {history_item['timestamp']}")
             
             # 使用与原始查询相同的显示逻辑
             recommendations = history_item.get('recommendations', [])
             display_search_results(history_item['part_number'], recommendations)
+        
+        # 将查询时间显示在返回按钮上方
+        st.caption(f"查询时间: {history_item['timestamp']}")
         
         if st.button("返回"):
             del st.session_state.selected_history
@@ -775,12 +892,11 @@ def render_ui(get_alternative_parts_func):
 
     # 添加页脚信息 - 降低显示度
     st.markdown("---")
-    st.markdown('<p class="footer-text">本工具基于深度学习模型与Nexar API，提供元器件替代参考，实际使用请结合专业工程师评估</p>', unsafe_allow_html=True)
+    st.markdown('<p class="footer-text">本工具基于DeepSeek大语言模型和Octopart元件库，提供元器件替代参考</p>', unsafe_allow_html=True)
 
 # 抽取显示结果的函数，以便重复使用
 def display_search_results(part_number, recommendations):
     # 结果区域添加容器
-    st.markdown(f"已为 **{part_number}** 找到 {len(recommendations)} 种替代方案")
     
     if recommendations:
         # 添加CSS样式 - 调整价格对齐和Pin兼容突出显示
@@ -806,15 +922,17 @@ def display_search_results(part_number, recommendations):
                 font-weight: bold !important;
                 border: 2px solid #2E7D32 !important;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+                text-align: left !important; /* 左对齐 */
             }
             .non-pin-compatible {
                 background-color: #FFA726 !important;
                 color: white !important;
+                text-align: left !important; /* 左对齐 */
             }
             /* 调整信息行样式确保对齐 */
             .info-row {
                 display: flex;
-                margin-bottom: 5px;
+                margin-bottom: 0px;
             }
             .info-label {
                 width: 80px;
@@ -822,6 +940,24 @@ def display_search_results(part_number, recommendations):
             }
             .info-value {
                 flex: 1;
+            }
+            /* 参数内容样式，与其他信息对齐 */
+            .param-content {
+                padding-left: 80px;
+                margin-bottom: 0px;
+                word-wrap: break-word;
+            }
+            /* 修复间距问题 */
+            .element-container {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+            }
+            /* 标签专用样式 */
+            .type-label {
+                margin: 0 !important;
+                padding: 2px 8px !important;
+                border-radius: 4px !important;
+                display: inline-block !important;
             }
         </style>
         """, unsafe_allow_html=True)
@@ -835,11 +971,8 @@ def display_search_results(part_number, recommendations):
                 # 卡片标题栏
                 st.markdown(f"### 方案 {i}")
                 
-                # 国产/进口标签
-                if rec['type'] == "国产":
-                    st.markdown("<span style='background-color: #ef5350; color: white; padding: 2px 8px; border-radius: 4px;'>国产</span>", unsafe_allow_html=True)
-                else:
-                    st.markdown("<span style='background-color: #42a5f5; color: white; padding: 2px 8px; border-radius: 4px;'>进口</span>", unsafe_allow_html=True)
+                # 型号名称 - 去掉后面的类别
+                st.markdown(f"### {rec.get('model', '未知型号')}")
                 
                 # 品牌显示栏
                 st.markdown(f"""
@@ -848,28 +981,34 @@ def display_search_results(part_number, recommendations):
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # 型号名称
-                st.markdown(f"### {rec.get('model', '未知型号')} ({rec.get('category', '未知类别')})")
-                
                 # Pin-to-Pin兼容性显示 - 根据兼容性添加不同的样式类
                 pin_to_pin = rec.get('pinToPin', False)
                 pin_class = "pin-compatible" if pin_to_pin else "non-pin-compatible"
                 pin_text = "Pin兼容" if pin_to_pin else "非Pin兼容"
                 
                 st.markdown(f"""
-                <div class="{pin_class}" style='padding: 8px 16px; border-radius: 4px; margin-bottom: 10px; text-align: center;'>
+                <div class="{pin_class}" style='padding: 8px 16px; border-radius: 4px; margin-bottom: 10px;'>
                     {pin_text}
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # 参数信息表格
-                st.markdown("""
-                <div style="margin-top: 10px;">
+                # 国产/进口标签 - 修改为使用专用样式类，并直接与信息表连接
+                type_display = ""
+                if rec['type'] == "国产":
+                    type_display = "<span class='type-label' style='background-color: #ef5350; color: white;'>国产</span>"
+                else:
+                    type_display = "<span class='type-label' style='background-color: #42a5f5; color: white;'>进口</span>"
+                
+                # 参数信息表格 - 直接与标签连接，没有间隔
+                st.markdown(f"""
+                <div style="margin: 0; padding: 0;">
+                {type_display}
+                </div>
                 """, unsafe_allow_html=True)
                 
                 # 使用统一布局确保对齐
                 st.markdown("""
-                <div class="info-row">
+                <div class="info-row" style="margin-top: 2px;">
                     <div class="info-label">类型：</div>
                     <div class="info-value">{}</div>
                 </div>
@@ -881,25 +1020,19 @@ def display_search_results(part_number, recommendations):
                     <div class="info-label">价格：</div>
                     <div class="info-value price-value">{}</div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">兼容性：</div>
-                    <div class="info-value">{}</div>
-                </div>
                 """.format(
                     rec.get('category', 'MCU'), 
                     rec.get('package', 'LQFP48'),
-                    rec.get('price', '未知'),
-                    rec.get('compatibility', '引脚完全兼容，软件需少量修改')
+                    rec.get('price', '未知')
                 ), unsafe_allow_html=True)
                 
-                # 参数详情
+                # 参数详情 - 调整为与其他信息对齐的样式
                 st.markdown("""
                 <div class="info-row">
                     <div class="info-label">参数：</div>
+                    <div class="info-value">{}</div>
                 </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"{rec.get('parameters', 'CPU内核: ARM Cortex-M3, 主频: 72MHz, Flash: 64KB, RAM: 20KB, IO: 37')}")
+                """.format(rec.get('parameters', 'CPU内核: ARM Cortex-M3, 主频: 72MHz, Flash: 64KB, RAM: 20KB, IO: 37')), unsafe_allow_html=True)
                 
                 # 供货周期
                 st.markdown("""
@@ -910,7 +1043,7 @@ def display_search_results(part_number, recommendations):
                 """.format(rec.get('leadTime', '3-5周')), unsafe_allow_html=True)
                 
                 # 数据手册链接
-                st.markdown(f"[查看数据手册]({rec.get('datasheet', 'https://example.com')})")
+                st.markdown(f"[参考信息]({rec.get('datasheet', 'https://example.com')})")
                 
                 st.markdown("</div>", unsafe_allow_html=True)
     else:

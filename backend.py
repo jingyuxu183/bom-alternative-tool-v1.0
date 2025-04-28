@@ -185,7 +185,8 @@ def get_nexar_alternatives(mpn: str, limit: int = 10):
                             })
                 else:
                     # 如果results不是列表，尝试其他数据结构
-                    st.warning(f"Nexar API 返回了非标准结构的数据 (results不是列表)")
+                    with st.sidebar.expander("调试信息 - API结构错误", expanded=False):
+                        st.warning(f"Nexar API 返回了非标准结构的数据 (results不是列表)")
                     
                     # 尝试直接从顶层提取数据
                     parts_data = []
@@ -212,7 +213,8 @@ def get_nexar_alternatives(mpn: str, limit: int = 10):
                                 "octopartUrl": part_item.get("octopartUrl", "https://example.com")
                             })
             else:
-                st.warning(f"Nexar API 返回了非标准结构 (supSearchMpn不是字典)")
+                with st.sidebar.expander("调试信息 - API结构错误", expanded=False):
+                    st.warning(f"Nexar API 返回了非标准结构 (supSearchMpn不是字典)")
                 # 尝试从整个响应中找到任何可能的部件信息
                 for key, value in data.items():
                     if isinstance(value, dict) and "parts" in value:
@@ -233,11 +235,12 @@ def get_nexar_alternatives(mpn: str, limit: int = 10):
         
         # 如果无法找到任何替代件
         if not alternative_parts:
-            st.info(f"Nexar API 未能为 '{mpn}' 找到替代元器件")
+            # 只在侧边栏显示错误信息，而不在主界面显示
+            st.sidebar.info(f"Nexar API 未能为 '{mpn}' 找到替代元器件")
             
             # 创建一个假数据用于测试其他部分的功能
             if st.session_state.get("use_dummy_data", False):
-                st.info("使用测试数据继续查询")
+                st.sidebar.info("使用测试数据继续查询")
                 alternative_parts = [
                     {
                         "name": f"类似元件: {mpn}替代品1",
@@ -608,7 +611,7 @@ def extract_json_content(content, call_type="初次调用"):
         # 最后尝试一种更宽松的解析方法，直接从文本构建数据
         # 如果内容看起来包含元器件信息但不是有效JSON，构造一个基本响应
         if "型号" in content and ("国产" in content or "进口" in content):
-            st.warning(f"DeepSeek API返回了非标准JSON格式，尝试构建基本替代方案 ({call_type})")
+            st.sidebar.warning(f"DeepSeek API返回了非标准JSON格式，尝试构建基本替代方案 ({call_type})")
             # 构造一个基本的替代方案
             basic_alt = [{
                 "model": "未能解析出型号",
@@ -628,7 +631,7 @@ def extract_json_content(content, call_type="初次调用"):
     except:
         pass
 
-    st.error(f"无法从API响应中提取有效的JSON内容 ({call_type})")
+    st.sidebar.error(f"无法从API响应中提取有效的JSON内容 ({call_type})")
     return []
 
 def get_alternative_parts(part_number):
@@ -639,7 +642,8 @@ def get_alternative_parts(part_number):
         for i, alt in enumerate(nexar_alternatives, 1):
             context += f"{i}. 型号: {alt['mpn']}, 名称: {alt['name']}, 链接: {alt['octopartUrl']}\n"
     else:
-        st.warning("⚠️ Nexar API 未返回数据，将直接使用 DeepSeek 推荐。")
+        # 将警告移到侧边栏
+        st.sidebar.warning(f"Nexar API 未能为 '{part_number}' 找到替代元件")
         context = "无 Nexar API 数据可用，请直接推荐替代元器件。\n"
 
     # Step 2: 构造 DeepSeek API 的提示词
@@ -725,7 +729,7 @@ def get_alternative_parts(part_number):
         need_second_query = len(recommendations) < 3 or not any(isinstance(rec, dict) and rec.get("type") == "国产" for rec in recommendations)
         
         if need_second_query:
-            st.warning("⚠️ 推荐结果不足或未包含国产方案，将重新调用 DeepSeek 推荐。")
+            st.sidebar.warning("⚠️ 推荐结果不足或未包含国产方案，将重新调用 DeepSeek 推荐。")
             
             prompt_retry = f"""
             任务：为以下元器件推荐替代产品，推荐的替代方案必须与输入型号 {part_number} 不同（绝对不能推荐 {part_number} 或其变体，如 {part_number} 的不同封装）。
@@ -799,9 +803,9 @@ def get_alternative_parts(part_number):
                         
                         # 记录二次查询结果
                         if found_domestic:
-                            st.success(f"✅ 二次查询成功！找到了 {len(additional_recommendations)} 个替代方案，其中包含国产方案。")
+                            st.sidebar.success(f"✅ 二次查询成功！找到了 {len(additional_recommendations)} 个替代方案，其中包含国产方案。")
                         else:
-                            st.info(f"ℹ️ 二次查询返回了 {len(additional_recommendations)} 个替代方案，但未找到国产方案。")
+                            st.sidebar.info(f"ℹ️ 二次查询返回了 {len(additional_recommendations)} 个替代方案，但未找到国产方案。")
                         
                         # 添加到推荐列表
                         for rec in additional_recommendations:
@@ -810,13 +814,13 @@ def get_alternative_parts(part_number):
                             recommendations.append(rec)
                         break
                     else:
-                        st.warning(f"⚠️ 重新调用 DeepSeek API 第 {attempt + 1} 次未返回有效推荐。")
+                        st.sidebar.warning(f"⚠️ 重新调用 DeepSeek API 第 {attempt + 1} 次未返回有效推荐。")
                         if attempt == max_retries - 1:
-                            st.error("❌ 重新调用 DeepSeek API 未能返回有效推荐，将使用默认替代方案。")
+                            st.sidebar.error("❌ 重新调用 DeepSeek API 未能返回有效推荐，将使用默认替代方案。")
                 except Exception as e:
-                    st.warning(f"⚠️ 重新调用 DeepSeek API 第 {attempt + 1} 次失败：{e}")
+                    st.sidebar.warning(f"⚠️ 重新调用 DeepSeek API 第 {attempt + 1} 次失败：{e}")
                     if attempt == max_retries - 1:
-                        st.error("❌ 重新调用 DeepSeek API 失败，将使用默认替代方案。")
+                        st.sidebar.error("❌ 重新调用 DeepSeek API 失败，将使用默认替代方案。")
             
             # 如果二次查询失败且结果仍然不足，从 Nexar 数据中补充
             if not second_query_success or len(recommendations) < 3:
@@ -845,7 +849,7 @@ def get_alternative_parts(part_number):
             if need_second_query:
                 domestic_count = sum(1 for rec in recommendations if isinstance(rec, dict) and rec.get("type") == "国产")
                 import_count = sum(1 for rec in recommendations if isinstance(rec, dict) and (rec.get("type") == "进口" or rec.get("type") == "未知"))
-                st.info(f"🔍 查找完成，共找到 {len(recommendations)} 个替代方案，其中国产方案 {domestic_count} 个，进口/未知方案 {import_count} 个。")
+                st.sidebar.info(f"🔍 查找完成，共找到 {len(recommendations)} 个替代方案，其中国产方案 {domestic_count} 个，进口/未知方案 {import_count} 个。")
 
         # Step 7: 再次后处理，识别国产方案
         for rec in recommendations:
@@ -856,7 +860,7 @@ def get_alternative_parts(part_number):
         try:
             # 确保输出结果是列表类型
             if not isinstance(recommendations, list):
-                st.warning(f"推荐结果不是列表类型: {type(recommendations)}")
+                st.sidebar.warning(f"推荐结果不是列表类型: {type(recommendations)}")
                 if recommendations:
                     if isinstance(recommendations, dict):
                         recommendations = [recommendations]
@@ -864,7 +868,7 @@ def get_alternative_parts(part_number):
                         try:
                             recommendations = list(recommendations)
                         except:
-                            st.error("无法将推荐结果转换为列表")
+                            st.sidebar.error("无法将推荐结果转换为列表")
                             return []
                 else:
                     return []
@@ -872,7 +876,7 @@ def get_alternative_parts(part_number):
             # 安全地执行切片
             return recommendations[:3] if recommendations else []
         except Exception as slice_error:
-            st.error(f"切片操作失败: {slice_error}")
+            st.sidebar.error(f"切片操作失败: {slice_error}")
             # 处理非常规情况，确保返回一个列表
             if recommendations:
                 if isinstance(recommendations, (list, tuple)):
@@ -882,7 +886,7 @@ def get_alternative_parts(part_number):
             else:
                 return []
     except Exception as e:
-        st.error(f"DeepSeek API 调用失败：{e}")
+        st.sidebar.error(f"DeepSeek API 调用失败：{e}")
         return []
 
 def process_bom_file(uploaded_file):
@@ -1030,51 +1034,57 @@ def process_bom_file(uploaded_file):
             os.unlink(tmp_filepath)
 
 def batch_get_alternative_parts(component_list, progress_callback=None):
-    """批量获取多个元器件的替代方案"""
+    """批量获取替代元器件方案
+    
+    Args:
+        component_list: 包含元器件信息的列表
+        progress_callback: 进度回调函数
+        
+    Returns:
+        批量查询结果字典
+    """
+    # 初始化结果字典
     results = {}
     total = len(component_list)
+    
     error_count = 0
     success_count = 0
     
-    # 添加一个全局开关，用于控制失败时是否使用测试数据继续
-    if 'use_dummy_data' not in st.session_state:
-        # 添加选项启用测试数据
-        st.sidebar.checkbox("API失败时使用测试数据", 
-                           value=True,  # 默认启用，以确保处理可以继续
-                           key="use_dummy_data",
-                           help="当API查询失败或格式错误时，使用测试数据继续处理流程")
+    # 设置最大重试次数
+    max_retries = 3
     
-    for i, component in enumerate(component_list):
+    # 遍历每个元器件
+    for idx, component in enumerate(component_list):
         mpn = component.get('mpn', '')
         name = component.get('name', '')
         description = component.get('description', '')
         
         # 更新进度
+        progress = (idx + 1) / total
         if progress_callback:
-            progress_callback((i+1)/total, f"处理 {i+1}/{total}: {mpn} ({name})")
+            progress_callback(progress, f"处理第 {idx+1}/{total} 个元器件: {mpn}")
         
         try:
-            # 尝试最多3次查询
-            max_retries = 3
             alternatives = []
             
             for attempt in range(max_retries):
                 try:
-                    st.info(f"元器件 {mpn} 第 {attempt+1} 次查询中...")
+                    # 将提示信息移到侧边栏
+                    st.sidebar.info(f"元器件 {mpn} 第 {attempt+1} 次查询中...")
                     alternatives = get_alternatives_direct(mpn, name, description)
                     if alternatives:  # 如果获取到结果，跳出重试循环
-                        st.success(f"元器件 {mpn} 查询成功，找到 {len(alternatives)} 个替代方案")
+                        st.sidebar.success(f"元器件 {mpn} 查询成功，找到 {len(alternatives)} 个替代方案")
                         break
                     else:
-                        st.warning(f"元器件 {mpn} 第 {attempt+1} 次查询未返回结果，将重试...")
+                        st.sidebar.warning(f"元器件 {mpn} 第 {attempt+1} 次查询未返回结果，将重试...")
                 except Exception as retry_error:
-                    st.warning(f"元器件 {mpn} 第 {attempt+1} 次查询失败: {str(retry_error)}")
+                    st.sidebar.warning(f"元器件 {mpn} 第 {attempt+1} 次查询失败: {str(retry_error)}")
                     if attempt == max_retries - 1:  # 最后一次尝试失败
                         raise  # 重新抛出异常给外层处理
             
             # 如果所有尝试都失败但启用了测试数据选项
             if not alternatives and st.session_state.get("use_dummy_data", False):
-                st.info(f"元器件 {mpn} 查询失败，使用测试数据")
+                st.sidebar.info(f"元器件 {mpn} 查询失败，使用测试数据")
                 alternatives = [
                     {
                         "model": f"{mpn}_替代1",
@@ -1165,9 +1175,9 @@ def batch_get_alternative_parts(component_list, progress_callback=None):
     
     # 在结束时显示批处理统计信息
     if error_count > 0:
-        st.warning(f"批量处理完成。共 {total} 个元器件，成功 {success_count} 个，失败 {error_count} 个。")
+        st.sidebar.warning(f"批量处理完成。共 {total} 个元器件，成功 {success_count} 个，失败 {error_count} 个。")
     else:
-        st.success(f"批量处理完成。成功处理所有 {total} 个元器件。")
+        st.sidebar.success(f"批量处理完成。成功处理所有 {total} 个元器件。")
     
     return results
 
@@ -1290,13 +1300,13 @@ def get_alternatives_direct(mpn, name="", description=""):
         return validated_recommendations[:3]
         
     except Exception as e:
-        st.error(f"DeepSeek API 查询失败: {e}")
+        st.sidebar.error(f"DeepSeek API 查询失败: {e}")
         import traceback
-        st.error(f"错误详情: {traceback.format_exc()}")
+        st.sidebar.error(f"错误详情: {traceback.format_exc()}")
         
         # 返回测试数据以保证前端显示正常
         if st.session_state.get("use_dummy_data", False):
-            st.info(f"使用测试数据继续处理 {mpn}")
+            st.sidebar.info(f"使用测试数据继续处理 {mpn}")
             return [
                 {
                     "model": f"{mpn}_ALT1",

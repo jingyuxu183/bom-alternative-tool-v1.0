@@ -1,0 +1,50 @@
+import streamlit as st
+
+def get_sidebar_hide_code():
+    """
+    生成用于隐藏Streamlit侧边栏默认按钮的CSS代码
+    """
+    return """
+    <style>
+        /* 隐藏原版Streamlit侧边栏上的按钮 */
+        button[kind="header"],
+        .st-emotion-cache-1f8prwq.e1nzilvr5,
+        [data-testid="baseButton-header"],
+        [data-testid="stDecoration"],
+        [data-testid="stAppViewBlockContainer"] div:nth-child(1) button {
+            visibility: hidden !important;
+            height: 0px !important;
+            position: absolute !important;
+            top: 0px !important;
+            width: 0px !important;
+            padding: 0 !important;
+            min-width: 0 !important;
+            display: none !important;
+        }
+        
+        /* 隐藏导航栏中不需要的链接 */
+        [data-testid="stSidebar"] a[href="/"],
+        [data-testid="stSidebar"] button[aria-label="View fullscreen"] {
+            display: none !important;
+        }
+        
+        /* 修复deploy和settings按钮丢失的问题 */
+        section[data-testid="stSidebar"] > div > button {
+            visibility: visible !important;
+            height: auto !important;
+            position: relative !important;
+            width: auto !important;
+            display: inline-flex !important;
+        }
+        
+        /* 侧边栏调整 */
+        [data-testid="stSidebar"] {
+            background-color: #f8f9fa;
+        }
+    </style>
+    """
+
+def hide_run_chat_buttons():
+    """隐藏侧边栏中的Run和Chat按钮，但保留侧边栏功能"""
+    code = get_sidebar_hide_code()
+    st.markdown(code, unsafe_allow_html=True) 
