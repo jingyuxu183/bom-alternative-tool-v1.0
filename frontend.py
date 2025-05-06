@@ -690,50 +690,38 @@ def render_ui(get_alternative_parts_func):
                     with st.chat_message("assistant"):
                         st.markdown(st.session_state.chat_messages[0]["content"])
                 
-                # 常见问题放在欢迎消息之后，输入框之前
-                st.subheader("常见问题示例")
-                if st.button("推荐工业级3.3V LDO，要求：输入电压≥5V，输出电流500mA，静态电流<50μA，通过AEC-Q100认证", key="preset_q1_tab", use_container_width=True):
-                    preset_question = "📊 推荐工业级3.3V LDO，要求：\n\n输入电压≥5V\n\n输出电流500mA\n\n静态电流<50μA\n\n通过AEC-Q100认证"
-                    st.session_state.chat_messages.append({"role": "user", "content": preset_question})
-                    
-                    # 调用backend模块获取回复
-                    import sys
-                    import os
-                    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                    from backend import chat_with_expert
-                    
-                    with st.spinner("思考中..."):
-                        try:
-                            response_stream = chat_with_expert(preset_question)
-                            full_response = ""
-                            for chunk in response_stream:
-                                if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                                    content = chunk.choices[0].delta.content
-                                    if content:
-                                        full_response += content
-                        
-                            # 将AI回复添加到对话历史
-                            st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
-                        except Exception as e:
-                            st.error(f"AI回复出错: {str(e)}")
-                            st.session_state.chat_messages.append({"role": "assistant", "content": f"抱歉，处理您的请求时出现错误: {str(e)}"})
-                    
-                    st.rerun()
-                
-                st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
-                
-                # 显示除第一条以外的对话历史
-                if len(st.session_state.chat_messages) > 1:
-                    for message in st.session_state.chat_messages[1:]:
-                        if message["role"] == "user":
-                            with st.chat_message("user"):
-                                st.markdown(message["content"])
-                        else:
-                            with st.chat_message("assistant"):
-                                st.markdown(message["content"])
+                # 增强显示用户输入区域
+                st.markdown("""
+                <style>
+                /* 增强聊天输入框的显示效果 */
+                .stChatInput {
+                    border: 2px solid #4285F4 !important;
+                    border-radius: 10px !important;
+                    padding: 10px !important;
+                    background-color: rgba(66, 133, 244, 0.05) !important;
+                    margin-top: 20px !important;
+                    margin-bottom: 20px !important;
+                    box-shadow: 0 2px 10px rgba(66, 133, 244, 0.1) !important;
+                }
+                .stChatInput > div {
+                    padding: 5px !important;
+                }
+                .stChatInput textarea, .stChatInput input {
+                    font-size: 1.05rem !important;
+                }
+                /* 调整输入框容器边距 */
+                section[data-testid="stChatInput"] {
+                    padding-top: 10px !important;
+                    padding-bottom: 10px !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
                 
                 # 用户输入区域
-                user_input = st.chat_input("请输入您的元器件选型或替代方案需求...")
+                st.markdown("<h3 style='margin-bottom: 5px;'>输入您的查询</h3>", unsafe_allow_html=True)
+                user_input = st.chat_input("请输入您的元器件选型或替代方案需求...", key="chat_input_prominent")
+                
+                # 处理用户输入并显示对话
                 if user_input:
                     # 显示用户输入
                     with st.chat_message("user"):
@@ -780,7 +768,17 @@ def render_ui(get_alternative_parts_func):
                     
                     st.rerun()
                 
-                # 添加清除对话按钮到输入框下方
+                # 显示除第一条以外的对话历史 - 先显示对话历史，再显示常见问题示例
+                if len(st.session_state.chat_messages) > 1:
+                    for message in st.session_state.chat_messages[1:]:
+                        if message["role"] == "user":
+                            with st.chat_message("user"):
+                                st.markdown(message["content"])
+                        else:
+                            with st.chat_message("assistant"):
+                                st.markdown(message["content"])
+                
+                # 添加清除对话按钮
                 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
                 if st.button("🗑️ 清除对话记录", use_container_width=True, key="clear_chat_main"):
                     st.session_state.chat_messages = [{
@@ -788,6 +786,29 @@ def render_ui(get_alternative_parts_func):
                         "content": "对话已清除。请告诉我您需要查找什么元器件的替代方案或有什么选型需求？"
                     }]
                     st.rerun()
+                
+                # 添加分隔线
+                st.markdown("<hr style='margin: 25px 0 15px 0;'>", unsafe_allow_html=True)
+                
+                # 常见问题示例部分放在最后
+                st.subheader("常见问题示例")
+                
+                # 添加CSS样式让常见问题示例更加美观，去掉复制按钮
+                st.markdown("""
+                <style>
+                .example-container {
+                    border: 1px solid #eee;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                    background-color: #f9f9f9;
+                }
+                </style>
+                
+                <div class="example-container">
+                    推荐工业级3.3V LDO，要求：输入电压≥5V，输出电流500mA，静态电流&lt;50μA，通过AEC-Q100认证
+                </div>
+                """, unsafe_allow_html=True)
             
             with btn_col:
                 # 空白区域，保持布局
@@ -915,18 +936,13 @@ def display_search_results(part_number, recommendations):
                 min-width: 80px; /* 设置最小宽度确保对齐 */
                 display: inline-block; /* 使宽度设置生效 */
             }
-            /* Pin兼容突出显示样式 */
+            /* Pin兼容显示样式 - 移除背景色 */
             .pin-compatible {
-                background-color: #4CAF50 !important; 
-                color: white !important;
-                font-weight: bold !important;
-                border: 2px solid #2E7D32 !important;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+                border: 1px solid #ccc !important;
                 text-align: left !important; /* 左对齐 */
             }
             .non-pin-compatible {
-                background-color: #FFA726 !important;
-                color: white !important;
+                border: 1px solid #ccc !important;
                 text-align: left !important; /* 左对齐 */
             }
             /* 调整信息行样式确保对齐 */
@@ -974,14 +990,14 @@ def display_search_results(part_number, recommendations):
                 # 型号名称 - 去掉后面的类别
                 st.markdown(f"### {rec.get('model', '未知型号')}")
                 
-                # 品牌显示栏
+                # 品牌显示栏 - 移除背景色
                 st.markdown(f"""
-                <div style='background-color: #4CAF50; color: white; padding: 8px 16px; border-radius: 4px; margin-bottom: 10px;'>
+                <div style='border: 1px solid #ccc; padding: 8px 16px; border-radius: 4px; margin-bottom: 10px;'>
                     {rec.get('brand', '未知品牌')}
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Pin-to-Pin兼容性显示 - 根据兼容性添加不同的样式类
+                # Pin-to-Pin兼容性显示 - 使用简单的边框样式而非彩色背景
                 pin_to_pin = rec.get('pinToPin', False)
                 pin_class = "pin-compatible" if pin_to_pin else "non-pin-compatible"
                 pin_text = "Pin兼容" if pin_to_pin else "非Pin兼容"
