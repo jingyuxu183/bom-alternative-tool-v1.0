@@ -116,13 +116,22 @@ def render_ui(get_alternative_parts_func):
         
         /* 增大标签页的字体大小和按钮大小 */
         button[data-baseweb="tab"] {
-            font-size: 1.25rem !important; /* 大约是主标题的一半大小 */
-            font-weight: 600 !important;
-            padding: 15px 30px !important; /* 增加内边距让按钮更大 */
+            font-size: 2.0rem !important; /* 增大字体尺寸，原来是1.25rem */
+            font-weight: 700 !important; /* 增加字体粗细 */
+            padding: 18px 36px !important; /* 增加内边距让按钮更大 */
             border-radius: 8px !important; /* 圆角边框 */
             margin: 0 10px !important; /* 按钮间距 */
             transition: all 0.3s ease !important; /* 平滑过渡效果 */
             background-color: #f0f2f6 !important; /* 默认背景色 */
+            line-height: 1.2 !important; /* 增加行高 */
+            letter-spacing: 0.5px !important; /* 增加字间距 */
+            text-transform: none !important; /* 确保文本不被转换 */
+        }
+        
+        /* 确保样式优先级 */
+        .stTabs button[role="tab"] {
+            font-size: 2.0rem !important;
+            font-weight: 700 !important;
         }
         
         /* 标签激活状态 */
@@ -406,9 +415,41 @@ def render_ui(get_alternative_parts_func):
     st.markdown('<h1 class="main-header">半岛智芯优选</h1>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 在此处添加选项卡，区分单个查询、批量查询和AI选型助手
-    tab1, tab2, tab3 = st.tabs(["单个元器件查询", "BOM批量查询", "💬 AI选型助手"])
+    # 增强标签样式，但使用原生Streamlit标签确保功能正常
+    st.markdown("""
+    <style>
+    /* 强制覆盖Streamlit标签样式 */
+    button[data-baseweb="tab"] div {
+        font-size: 24px !important;
+        font-weight: 700 !important;
+    }
     
+    /* 增大标签页的按钮大小 */
+    button[data-baseweb="tab"] {
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        padding: 18px 36px !important;
+        border-radius: 8px !important;
+        background-color: #f0f2f6 !important;
+    }
+    
+    /* 确保激活状态样式 */
+    button[data-baseweb="tab"][aria-selected="true"] {
+        background-color: #1a73e8 !important;
+        color: white !important;
+    }
+    
+    /* 调整标签容器样式 */
+    [data-testid="stHorizontalBlock"] [data-baseweb="tab-list"] {
+        justify-content: center !important;
+        gap: 20px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # 创建原始标签
+    tab1, tab2, tab3 = st.tabs(["元器件替代查询", "💬 AI选型助手", "批量替代查询"])
+
     with tab1:
         # 搜索区域 - 修改结构，确保输入框和按钮完全匹配
         with st.container():
@@ -455,6 +496,167 @@ def render_ui(get_alternative_parts_func):
                     display_search_results(part_number, recommendations)
     
     with tab2:
+        # 聊天界面容器
+        with st.container():
+            st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
+            
+            # 创建一个两列布局，主要区域给聊天，侧边留给操作按钮
+            chat_col, btn_col = st.columns([4, 1])
+            
+            with chat_col:
+                # 显示对话历史的第一条欢迎消息
+                # 仅在没有其他消息时显示欢迎消息
+                if len(st.session_state.chat_messages) == 1 and st.session_state.chat_messages[0]["role"] == "assistant":
+                    with st.chat_message("assistant"):
+                        st.markdown(st.session_state.chat_messages[0]["content"])
+                
+                # 增强显示用户输入区域
+                st.markdown("""
+                <style>
+                /* 增强聊天输入框的显示效果 */
+                .stChatInput {
+                    border: 2px solid #4285F4 !important;
+                    border-radius: 10px !important;
+                    padding: 10px !important;
+                    background-color: rgba(66, 133, 244, 0.05) !important;
+                    margin-top: 20px !important;
+                    margin-bottom: 20px !important;
+                    box-shadow: 0 2px 10px rgba(66, 133, 244, 0.1) !important;
+                }
+                .stChatInput > div {
+                    padding: 5px !important;
+                }
+                .stChatInput textarea, .stChatInput input {
+                    font-size: 1.05rem !important;
+                }
+                /* 调整输入框容器边距 */
+                section[data-testid="stChatInput"] {
+                    padding-top: 10px !important;
+                    padding-bottom: 10px !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # 用户输入区域
+                st.markdown("<h3 style='margin-bottom: 5px;'>输入您的查询</h3>", unsafe_allow_html=True)
+                user_input = st.chat_input("请输入您的元器件选型或替代方案需求...", key="chat_input_prominent")
+                
+                # 处理用户输入并显示对话
+                if user_input:
+                    # 显示用户输入
+                    with st.chat_message("user"):
+                        st.markdown(user_input)
+                    # 添加到对话历史
+                    st.session_state.chat_messages.append({"role": "user", "content": user_input})
+                    
+                    # 显示AI回复
+                    with st.chat_message("assistant"):
+                        with st.spinner("思考中..."):
+                            # 导入backend模块
+                            import sys
+                            import os
+                            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                            from backend import chat_with_expert
+                            
+                            try:
+                                # 调用AI对话函数并处理流式输出
+                                response_stream = chat_with_expert(
+                                    user_input, 
+                                    history=st.session_state.chat_messages[:-1]  # 不包括刚刚添加的用户消息
+                                )
+                                
+                                response_container = st.empty()
+                                full_response = ""
+                                
+                                # 处理流式响应
+                                for chunk in response_stream:
+                                    if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
+                                        content = chunk.choices[0].delta.content
+                                        if content:
+                                            full_response += content
+                                            response_container.markdown(full_response + "▌")
+                                
+                                # 显示最终结果
+                                response_container.markdown(full_response)
+                                
+                                # 将AI回复添加到对话历史
+                                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
+                            except Exception as e:
+                                error_msg = f"处理您的请求时出现错误: {str(e)}"
+                                st.error(error_msg)
+                                st.session_state.chat_messages.append({"role": "assistant", "content": f"抱歉，{error_msg}"})
+                    
+                    st.rerun()
+                
+                # 显示除第一条以外的对话历史 - 先显示对话历史，再显示常见问题示例
+                if len(st.session_state.chat_messages) > 1:
+                    # 倒序显示消息，使最新的对话在上方
+                    # 按对话对（用户问题+AI回答）处理
+                    messages = st.session_state.chat_messages[1:]  # 排除第一条欢迎消息
+                    
+                    # 按照对话对分组
+                    conversation_pairs = []
+                    i = 0
+                    while i < len(messages):
+                        # 如果是用户消息并且后面跟着助手消息，则作为一对显示
+                        if i + 1 < len(messages) and messages[i]["role"] == "user" and messages[i+1]["role"] == "assistant":
+                            conversation_pairs.append((messages[i], messages[i+1]))
+                            i += 2
+                        # 如果只有用户消息没有助手回复，或者其他不成对的情况
+                        else:
+                            if messages[i]["role"] == "user":
+                                conversation_pairs.append((messages[i], None))
+                            else:
+                                conversation_pairs.append((None, messages[i]))
+                            i += 1
+                    
+                    # 逆序显示对话对（最新的对话在上方）
+                    for user_msg, assistant_msg in reversed(conversation_pairs):
+                        if user_msg:
+                            with st.chat_message("user"):
+                                st.markdown(user_msg["content"])
+                        
+                        if assistant_msg:
+                            with st.chat_message("assistant"):
+                                st.markdown(assistant_msg["content"])
+                
+                # 添加清除对话按钮
+                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                if st.button("🗑️ 清除对话记录", use_container_width=True, key="clear_chat_main"):
+                    st.session_state.chat_messages = [{
+                        "role": "assistant", 
+                        "content": "对话已清除。请告诉我您需要查找什么元器件的替代方案或有什么选型需求？"
+                    }]
+                    st.rerun()
+                
+                # 添加分隔线
+                st.markdown("<hr style='margin: 25px 0 15px 0;'>", unsafe_allow_html=True)
+                
+                # 常见问题示例部分放在最后
+                st.subheader("常见问题示例")
+                
+                # 添加CSS样式让常见问题示例更加美观，去掉复制按钮
+                st.markdown("""
+                <style>
+                .example-container {
+                    border: 1px solid #eee;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                    background-color: #f9f9f9;
+                }
+                </style>
+                
+                <div class="example-container">
+                    推荐工业级3.3V LDO，要求：输入电压≥5V，输出电流500mA，静态电流&lt;50μA，通过AEC-Q100认证
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with btn_col:
+                # 空白区域，保持布局
+                st.markdown("<div style='margin-top: 80px;'></div>", unsafe_allow_html=True)
+
+    with tab3:
         # 文件上传区域 - 使用更醒目的样式
         st.markdown("""
         <style>
@@ -675,144 +877,6 @@ def render_ui(get_alternative_parts_func):
         else:
             # 空白展示区，不显示任何提示或装饰
             pass
-
-    with tab3:
-        # 聊天界面容器
-        with st.container():
-            st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
-            
-            # 创建一个两列布局，主要区域给聊天，侧边留给操作按钮
-            chat_col, btn_col = st.columns([4, 1])
-            
-            with chat_col:
-                # 显示对话历史的第一条欢迎消息
-                if st.session_state.chat_messages and st.session_state.chat_messages[0]["role"] == "assistant":
-                    with st.chat_message("assistant"):
-                        st.markdown(st.session_state.chat_messages[0]["content"])
-                
-                # 增强显示用户输入区域
-                st.markdown("""
-                <style>
-                /* 增强聊天输入框的显示效果 */
-                .stChatInput {
-                    border: 2px solid #4285F4 !important;
-                    border-radius: 10px !important;
-                    padding: 10px !important;
-                    background-color: rgba(66, 133, 244, 0.05) !important;
-                    margin-top: 20px !important;
-                    margin-bottom: 20px !important;
-                    box-shadow: 0 2px 10px rgba(66, 133, 244, 0.1) !important;
-                }
-                .stChatInput > div {
-                    padding: 5px !important;
-                }
-                .stChatInput textarea, .stChatInput input {
-                    font-size: 1.05rem !important;
-                }
-                /* 调整输入框容器边距 */
-                section[data-testid="stChatInput"] {
-                    padding-top: 10px !important;
-                    padding-bottom: 10px !important;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                
-                # 用户输入区域
-                st.markdown("<h3 style='margin-bottom: 5px;'>输入您的查询</h3>", unsafe_allow_html=True)
-                user_input = st.chat_input("请输入您的元器件选型或替代方案需求...", key="chat_input_prominent")
-                
-                # 处理用户输入并显示对话
-                if user_input:
-                    # 显示用户输入
-                    with st.chat_message("user"):
-                        st.markdown(user_input)
-                    # 添加到对话历史
-                    st.session_state.chat_messages.append({"role": "user", "content": user_input})
-                    
-                    # 显示AI回复
-                    with st.chat_message("assistant"):
-                        with st.spinner("思考中..."):
-                            # 导入backend模块
-                            import sys
-                            import os
-                            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-                            from backend import chat_with_expert
-                            
-                            try:
-                                # 调用AI对话函数并处理流式输出
-                                response_stream = chat_with_expert(
-                                    user_input, 
-                                    history=st.session_state.chat_messages[:-1]  # 不包括刚刚添加的用户消息
-                                )
-                                
-                                response_container = st.empty()
-                                full_response = ""
-                                
-                                # 处理流式响应
-                                for chunk in response_stream:
-                                    if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                                        content = chunk.choices[0].delta.content
-                                        if content:
-                                            full_response += content
-                                            response_container.markdown(full_response + "▌")
-                                
-                                # 显示最终结果
-                                response_container.markdown(full_response)
-                                
-                                # 将AI回复添加到对话历史
-                                st.session_state.chat_messages.append({"role": "assistant", "content": full_response})
-                            except Exception as e:
-                                error_msg = f"处理您的请求时出现错误: {str(e)}"
-                                st.error(error_msg)
-                                st.session_state.chat_messages.append({"role": "assistant", "content": f"抱歉，{error_msg}"})
-                    
-                    st.rerun()
-                
-                # 显示除第一条以外的对话历史 - 先显示对话历史，再显示常见问题示例
-                if len(st.session_state.chat_messages) > 1:
-                    for message in st.session_state.chat_messages[1:]:
-                        if message["role"] == "user":
-                            with st.chat_message("user"):
-                                st.markdown(message["content"])
-                        else:
-                            with st.chat_message("assistant"):
-                                st.markdown(message["content"])
-                
-                # 添加清除对话按钮
-                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-                if st.button("🗑️ 清除对话记录", use_container_width=True, key="clear_chat_main"):
-                    st.session_state.chat_messages = [{
-                        "role": "assistant", 
-                        "content": "对话已清除。请告诉我您需要查找什么元器件的替代方案或有什么选型需求？"
-                    }]
-                    st.rerun()
-                
-                # 添加分隔线
-                st.markdown("<hr style='margin: 25px 0 15px 0;'>", unsafe_allow_html=True)
-                
-                # 常见问题示例部分放在最后
-                st.subheader("常见问题示例")
-                
-                # 添加CSS样式让常见问题示例更加美观，去掉复制按钮
-                st.markdown("""
-                <style>
-                .example-container {
-                    border: 1px solid #eee;
-                    border-radius: 8px;
-                    padding: 15px;
-                    margin-bottom: 15px;
-                    background-color: #f9f9f9;
-                }
-                </style>
-                
-                <div class="example-container">
-                    推荐工业级3.3V LDO，要求：输入电压≥5V，输出电流500mA，静态电流&lt;50μA，通过AEC-Q100认证
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with btn_col:
-                # 空白区域，保持布局
-                st.markdown("<div style='margin-top: 80px;'></div>", unsafe_allow_html=True)
 
     # 在此处添加历史查询功能
     if 'search_history' not in st.session_state:
