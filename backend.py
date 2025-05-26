@@ -672,15 +672,24 @@ def get_alternative_parts(part_number):
        - 对于人民币价格，使用格式：¥X-¥Y（例如：¥10-¥15）
        - 对于美元价格，使用格式：$X-$Y（例如：$1.5-$2.0）
        - 请根据产品实际销售地区和行情确定合适的货币单位
-    9. 评估物料生命周期状态，如"量产中"、"新产品"、"即将停产"、"已停产"、"不推荐用于新设计"等
-    10. 重要：判断每个替代方案是否与原始元器件为"pin-to-pin替代"，即引脚排列、功能完全兼容，可直接替换
+    9. 详细评估物料生命周期状态：
+       a. 提供上市时间（例如：2015年上市）
+       b. 明确当前生命周期阶段（例如："量产中"、"新产品"、"即将停产"、"已停产"、"不推荐用于新设计"等）
+       c. 预估剩余生命周期（例如：预计2030年前持续供货）
+       d. 标明是否有长期供货计划或EOL（生命周期终止）通知
+    10. 重要：准确判断每个替代方案是否与原始元器件为"pin-to-pin替代"，必须满足以下所有条件才能标记为pin兼容:
+        a. 物理尺寸和封装与原元器件相同，引脚排列和间距一致，可以在相同PCB焊盘位置安装
+        b. 所有引脚的功能和编号与原元器件完全匹配
+        c. 电气特性（电压/电流/时序等）与原元器件在合理范围内兼容
+        d. 无需对PCB进行任何修改（包括布线、跳线等）就能替换使用
+        e. 如果以上任何一点不符合，或者无法确定，则标记为"非Pin兼容"
     11. 提供产品官网链接（若无真实链接，可提供示例链接，如 https://www.example.com/datasheet）
     12. 推荐的型号不能与输入型号 {part_number} 相同
     13. 必须严格返回以下 JSON 格式的结果，不允许添加任何额外说明、Markdown 格式或代码块标记（即不要使用 ```json 或其他标记），直接返回裸 JSON：
     [
-        {{"model": "SG1117-1.2", "brand": "SG Micro/圣邦微电子", "category": "LDO", "package": "DPAK", "parameters": "输入电压: 2.0-12V, 输出电压: 1.2V, 输出电流: 800mA, 压差: 1.1V", "type": "国产", "status": "量产中", "price": "¥2.5-¥3.5", "leadTime": "4-6周", "pinToPin": true, "compatibility": "完全兼容，可直接替换原型号", "datasheet": "https://www.sgmicro.com/datasheet"}},
-        {{"model": "GD32F103C8T6", "brand": "GigaDevice/兆易创新", "category": "MCU", "package": "LQFP48", "parameters": "CPU内核: ARM Cortex-M3, 主频: 72MHz, Flash: 64KB, RAM: 20KB, IO: 37", "type": "国产", "status": "量产中", "price": "¥12-¥15", "leadTime": "3-5周", "pinToPin": true, "compatibility": "引脚完全兼容，软件需少量修改", "datasheet": "https://www.gigadevice.com/datasheet"}},
-        {{"model": "MP2307DN", "brand": "MPS/芯源系统", "category": "DCDC", "package": "SOIC-8", "parameters": "输入电压: 4.75-23V, 输出电压: 0.925-20V, 输出电流: 3A, 效率: 95%", "type": "进口", "status": "即将停产", "price": "$0.8-$1.2", "leadTime": "6-8周", "pinToPin": false, "compatibility": "需要重新设计PCB布局", "datasheet": "https://www.monolithicpower.com/datasheet"}}
+        {{"model": "SG1117-1.2", "brand": "SG Micro/圣邦微电子", "category": "LDO", "package": "DPAK", "parameters": "输入电压: 2.0-12V, 输出电压: 1.2V, 输出电流: 800mA, 压差: 1.1V", "type": "国产", "status": "量产中", "price": "¥2.5-¥3.5", "leadTime": "4-6周", "pinToPin": true, "compatibility": "完全兼容，可直接替换原型号", "datasheet": "https://www.sgmicro.com/datasheet", "releaseDate": "2015年", "lifecycle": "量产中，预计2030年前持续供货"}},
+        {{"model": "GD32F103C8T6", "brand": "GigaDevice/兆易创新", "category": "MCU", "package": "LQFP48", "parameters": "CPU内核: ARM Cortex-M3, 主频: 72MHz, Flash: 64KB, RAM: 20KB, IO: 37", "type": "国产", "status": "量产中", "price": "¥12-¥15", "leadTime": "3-5周", "pinToPin": true, "compatibility": "引脚完全兼容，软件需少量修改", "datasheet": "https://www.gigadevice.com/datasheet", "releaseDate": "2013年", "lifecycle": "量产中，长期供货计划（10年+）"}},
+        {{"model": "MP2307DN", "brand": "MPS/芯源系统", "category": "DCDC", "package": "SOIC-8", "parameters": "输入电压: 4.75-23V, 输出电压: 0.925-20V, 输出电流: 3A, 效率: 95%", "type": "进口", "status": "即将停产", "price": "$0.8-$1.2", "leadTime": "6-8周", "pinToPin": false, "compatibility": "需要重新设计PCB布局", "datasheet": "https://www.monolithicpower.com/datasheet", "releaseDate": "2010年", "lifecycle": "将于2025年停产，建议寻找替代方案"}}
     ]
     """
 
